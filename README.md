@@ -1,27 +1,26 @@
 ## Quick Start
 
-Start a syncplay service, default at `tcp/8999`, you can also specify a password.
+Start a syncplay service at `tcp/8999`, you can also specify a password.
 
 ```bash
 docker run -d \
---net=host \
---name=syncplay \
--e PORT=<PORT> \
--e PASSWORD=<PASSWORD> \
+--network host \
+--name syncplay \
+--env PORT=<PORT> \
+--env PASSWORD=<PASSWORD> \
 dnomd343/syncplay
 ```
 
-If TLS is enabled, you have to set hostname and certificate folder.
+If TLS is enabled, you have to set certificate folder with `privkey.pem`, `cert.pem` and `chain.pem`.
 
 ```bash
 docker run -d \
---net=host \
---name=syncplay \
---hostname=syncplay.your.domain
--e PORT=<PORT> \
--e PASSWORD=<PASSWORD> \
--e TLS=/certs \
--v <certs>:/certs \
+--network host \
+--name syncplay \
+--env PORT=<PORT> \
+--env PASSWORD=<PASSWORD> \
+--env TLS=/certs \
+--volume <certs>:/certs \
 dnomd343/syncplay
 ```
 
