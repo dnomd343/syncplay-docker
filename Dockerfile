@@ -9,16 +9,14 @@ WORKDIR ./syncplay-${SYNCPLAY}/
 RUN cat /dev/null > requirements_gui.txt
 RUN SNAPCRAFT_PART_BUILD=1 pip wheel --wheel-dir /wheels/ ./
 WORKDIR /wheels/
-RUN pip install *.whl
 RUN ls *.whl | xargs -P0 -n1 unzip -d /unzip/
-WORKDIR /release/lib/python3.7/
+WORKDIR /release/local/lib/python3.7/
 RUN cp -r /unzip/ ./site-packages/
-WORKDIR /release/bin/
-RUN cp /usr/local/bin/syncplay-server ./
-COPY ./init.sh ./syncplay
+COPY ./boot.py /release/bin/syncplay
 
 FROM ${PYTHON}
 RUN apk add --no-cache libffi openssl
-COPY --from=build /release/ /usr/local/
+COPY --from=build /release/ /usr/
+ENV PYTHONUNBUFFERED=1
 EXPOSE 8999
 ENTRYPOINT ["syncplay"]
