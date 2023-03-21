@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "boot start"
+
 args="--salt=$SALT"
 
 [ -n "$TLS" ] && args="$args --tls=$TLS"
