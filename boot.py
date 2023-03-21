@@ -21,8 +21,6 @@ def fetchOpt(args: list, option: str, default):
         sys.exit(1)
     targetVal = args[index + 1]
     del sys.argv[index : index + 2]  # remove target option and value
-    if type(default) == int:
-        return int(targetVal)  # return int value
     return targetVal
 
 
@@ -31,7 +29,7 @@ isDebug = checkOpt(sys.argv, '--debug')
 
 portValue = None  # no specify in default
 if 'PORT' in os.environ:  # `PORT` env variable
-    portValue = int(os.environ['PORT'])
+    portValue = os.environ['PORT']
 portValue = fetchOpt(sys.argv, '--port', portValue)
 
 
@@ -69,12 +67,12 @@ elif motdMessage is not None:
     motdFile = '/app/syncplay/motd'
     os.system('mkdir -p /app/syncplay/')
     with open(motdFile, mode = 'w', encoding = 'utf-8') as fileObj:
-        fileObj.write(str(motdMessage))
+        fileObj.write(motdMessage)
 
 
 if isDebug:  # print debug log
     if portValue is not None:
-        print('Port -> %d' % portValue)
+        print('Port -> %s' % portValue)
 
     if saltValue is None:
         print('Using random salt', file = sys.stderr)
@@ -96,7 +94,7 @@ if isDebug:  # print debug log
 
 
 if portValue is not None:
-    sys.argv += ['--port', str(portValue)]
+    sys.argv += ['--port', portValue]
 if passwdStr is not None:
     sys.argv += ['--password', passwdStr]
 if saltValue is not None:
