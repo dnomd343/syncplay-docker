@@ -47,6 +47,13 @@ if checkOpt(sys.argv, '--random-salt'):
 saltValue = fetchOpt(sys.argv, '--salt', saltValue)
 
 
+isolateRoom = False  # disable isolate room in default
+if 'ISOLATE' in os.environ and os.environ['ISOLATE'] in ['ON', 'TRUE']:
+    isolateRoom = True
+if checkOpt(sys.argv, '--isolate-room'):
+    isolateRoom = True
+
+
 tlsPath = '/certs'
 if 'TLS_PATH' in os.environ:  # `TLS_PATH` env variable
     tlsPath = os.environ['TLS_PATH']
@@ -59,7 +66,11 @@ if 'TLS' in os.environ and os.environ['TLS'] in ['ON', 'TRUE']:
     enableTls = True
 
 
-motdMessage = fetchOpt(sys.argv, '--motd', None)  # without motd message in default
+motdMessage = None  # without motd message in default
+if 'MOTD' in os.environ:  # `MOTD` env variable
+    motdMessage = os.environ['MOTD']
+motdMessage = fetchOpt(sys.argv, '--motd', motdMessage)
+
 motdFile = fetchOpt(sys.argv, '--motd-file', None)
 if motdFile is not None:
     motdMessage = None  # cover motd message
@@ -72,12 +83,15 @@ elif motdMessage is not None:
 
 if isDebug:  # print debug log
     if portValue is not None:
-        print('Port -> %s' % portValue)
+        print('Port -> %s' % portValue, file = sys.stderr)
 
     if saltValue is None:
         print('Using random salt', file = sys.stderr)
     else:
         print('Salt -> `%s`' % saltValue, file = sys.stderr)
+
+    if isolateRoom:
+        print('Isolate room enabled', file = sys.stderr)
 
     if passwdStr is None:
         print('Running without password', file = sys.stderr)
@@ -101,6 +115,8 @@ if saltValue is not None:
     sys.argv += ['--salt', saltValue]
 if enableTls:
     sys.argv += ['--tls', tlsPath]
+if isolateRoom:
+    sys.argv += ['--isolate-room']
 if motdFile is not None:
     sys.argv += ['--motd-file', motdFile]
 
