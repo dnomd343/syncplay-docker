@@ -19,6 +19,8 @@ You can also use environment variables to specify.
 docker run -d --network host --name syncplay \
   --env PORT=12345 \
   --env PASSWD=dnomd343 \
+  --env MOTD="Hello World" \
+  --env ISOLATE=ON \
   dnomd343/syncplay
 ```
 
@@ -35,7 +37,7 @@ docker run -d --network host --name syncplay \
 
 You can specify the following arguments:
 
-+ `--port [PORT]` ：Listening port of Syncplay server, the default is `8999`.
++ `--port [PORT]` ：Listening port of Syncplay server, the default is `8999`
 
 + `--motd [MESSAGE]` ：The welcome text after the user enters the room.
 
@@ -73,13 +75,17 @@ acme.sh --install-cert -d 343.re \
 
 You can also specify arguments through environment variables:
 
-+ `PORT` ：Equivalent to `--port`.
++ `PORT` ：Equivalent to `--port`
 
-+ `SALT` ：Equivalent to `--salt`.
++ `SALT` ：Equivalent to `--salt`
 
-+ `PASSWD` ：Equivalent to `--password`.
++ `MOTD` ：Equivalent to `--motd`
 
-+ `TLS=ON` ：Equivalent to `--enable-tls`.
++ `PASSWD` ：Equivalent to `--password`
+
++ `TLS=ON` ：Equivalent to `--enable-tls`
+
++ `ISOLATE=ON` ：Equivalent to `--isolate-room`
 
 > Note that its priority is lower than command line arguments.
 
