@@ -3,6 +3,7 @@ ARG PYTHON="python:3.7-alpine3.17"
 FROM ${PYTHON} as build
 ENV SYNCPLAY="1.6.9"
 RUN apk add gcc musl-dev libffi-dev
+RUN if [ "$(getconf LONG_BIT)" == "32" ]; then apk add cargo openssl-dev; fi
 RUN wget https://github.com/Syncplay/syncplay/archive/refs/tags/v${SYNCPLAY}.tar.gz && \
     tar xf v${SYNCPLAY}.tar.gz
 WORKDIR ./syncplay-${SYNCPLAY}/
