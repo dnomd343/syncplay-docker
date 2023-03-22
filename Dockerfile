@@ -1,4 +1,4 @@
-ARG PYTHON="python:3.7-alpine3.17"
+ARG PYTHON="python:3.9-alpine3.17"
 
 FROM ${PYTHON} as build
 ENV SYNCPLAY="1.6.9"
@@ -11,7 +11,7 @@ RUN cat /dev/null > requirements_gui.txt
 RUN SNAPCRAFT_PART_BUILD=1 pip wheel --wheel-dir /wheels/ ./
 WORKDIR /wheels/
 RUN ls *.whl | xargs -P0 -n1 unzip -d /unzip/
-WORKDIR /release/local/lib/python3.7/
+WORKDIR /release/local/lib/python3.9/
 RUN cp -r /unzip/ ./site-packages/
 COPY ./boot.py /release/bin/syncplay
 
