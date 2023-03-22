@@ -1,18 +1,17 @@
 ARG PYTHON="python:3.9-alpine3.17"
 
 FROM ${PYTHON} as build
-ENV SYNCPLAY="1.6.9"
+ENV SYNCPLAY="1.7.0-RC1"
 RUN apk add gcc musl-dev libffi-dev
 RUN if [ "$(getconf LONG_BIT)" == "32" ]; then apk add cargo openssl-dev; fi
-RUN wget https://github.com/Syncplay/syncplay/archive/refs/tags/v${SYNCPLAY}.tar.gz && \
-    tar xf v${SYNCPLAY}.tar.gz
+RUN wget https://github.com/Syncplay/syncplay/archive/refs/tags/${SYNCPLAY}.tar.gz && \
+    tar xf ${SYNCPLAY}.tar.gz
 WORKDIR ./syncplay-${SYNCPLAY}/
 RUN cat /dev/null > requirements_gui.txt
 RUN SNAPCRAFT_PART_BUILD=1 pip wheel --wheel-dir /wheels/ ./
-WORKDIR /wheels/
-RUN ls *.whl | xargs -P0 -n1 unzip -d /unzip/
-WORKDIR /release/local/lib/python3.9/
-RUN cp -r /unzip/ ./site-packages/
+WORKDIR /release/local/lib/
+RUN mkdir $(basename /usr/local/lib/python3.*/) && cd ./python3.*/ && \
+    ls /wheels/*.whl | xargs -P0 -n1 unzip -d ./site-packages/
 COPY ./boot.py /release/bin/syncplay
 
 FROM ${PYTHON}
