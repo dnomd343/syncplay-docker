@@ -3,20 +3,20 @@
 Start a syncplay service at `tcp/8999` with one command.
 
 ```bash
-docker run -d --network host --name syncplay dnomd343/syncplay
+docker run -d --network host --restart always --name syncplay dnomd343/syncplay
 ```
 
 More arguments can be specified.
 
 ```bash
-docker run -d --network host --name syncplay dnomd343/syncplay \
+docker run -d --network host --restart always --name syncplay dnomd343/syncplay \
   --port 12345 --password dnomd343 --motd hello --isolate-room --disable-chat
 ```
 
 You can also use environment variables to specify.
 
 ```bash
-docker run -d --network host --name syncplay \
+docker run -d --network host --restart always --name syncplay \
   --env PORT=12345 \
   --env PASSWD=dnomd343 \
   --env MOTD="Hello World" \
@@ -27,7 +27,7 @@ docker run -d --network host --name syncplay \
 Enable TLS support of Syncplay server.
 
 ```bash
-docker run -d --network host --name syncplay \
+docker run -d --network host --restart always --name syncplay \
   --volume /etc/ssl/certs/343.re/:/certs/ dnomd343/syncplay --enable-tls
 ```
 
