@@ -23,7 +23,7 @@ def temp_file(file: str, content: str) -> str:
     """ Create and save content to temporary files. """
     file = os.path.join('/tmp/', file)
     with open(file, 'w') as fp:
-        fp.write(f'{content}\n')
+        fp.write(content)
     return file
 
 
@@ -67,7 +67,7 @@ def load_config(args: dict[str, Any], file: str) -> dict[str, Any]:
 
 def build_args(opts: dict):
     """ Construct the startup arguments for syncplay server. """
-    args = ['--port', opts.get('port', '8999')]
+    args = ['--port', str(opts.get('port', 8999))]
     if 'password' in opts:
         args += ['--password', opts['password']]
     if 'motd' in opts:

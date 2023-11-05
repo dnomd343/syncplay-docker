@@ -10,6 +10,8 @@ RUN cat /dev/null > requirements_gui.txt
 RUN SNAPCRAFT_PART_BUILD=1 pip wheel --wheel-dir /wheels/ ./
 
 FROM ${PYTHON} AS syncplay
+WORKDIR /wheels/
+RUN pip wheel PyYaml
 COPY --from=builder /wheels/ /wheels/
 WORKDIR /release/local/lib/
 RUN mkdir $(basename /usr/local/lib/python3.*/) && cd ./python3.*/ && \
