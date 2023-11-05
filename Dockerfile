@@ -19,7 +19,7 @@ RUN mkdir $(basename /usr/local/lib/python3.*/) && cd ./python3.*/ && \
 COPY ./boot.py /release/bin/syncplay
 
 FROM ${PYTHON}
-RUN apk add --no-cache libffi openssl
+RUN sh -c '[ $(getconf LONG_BIT) -eq 64 ] || apk add --no-cache libgcc'
 COPY --from=syncplay /release/ /usr/
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8999
