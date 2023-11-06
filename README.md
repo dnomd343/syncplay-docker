@@ -1,5 +1,7 @@
 ## Quick Start
 
+[简体中文](./README_zh-CN.md)
+
 Using one command to start the Syncplay service. Yes, it's very simple.
 
 ```bash
