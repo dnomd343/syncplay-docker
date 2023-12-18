@@ -1,7 +1,7 @@
 ARG PYTHON="python:3.10-alpine3.18"
 
 FROM ${PYTHON} AS builder
-ENV SYNCPLAY="1.7.1-RC1"
+ENV SYNCPLAY="1.7.1"
 RUN apk add gcc musl-dev libffi-dev
 RUN sh -c '[ $(getconf LONG_BIT) -eq 64 ] || apk add cargo openssl-dev'
 RUN wget https://github.com/Syncplay/syncplay/archive/v${SYNCPLAY}.tar.gz -O- | tar xz
