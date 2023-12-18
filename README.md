@@ -1,6 +1,6 @@
 ## Quick Start
 
-[简体中文](./README_zh-CN.md) | [繁體中文](./README_zh-TW.md)
+[简体中文](./README_zh-CN.md) | [繁體中文](./README_zh-TW.md) | [日本語](./README_ja-JP.md)
 
 Using one command to start the [Syncplay](https://syncplay.pl/) service. Yes, it's very simple.
 
