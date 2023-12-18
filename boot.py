@@ -23,9 +23,9 @@ class SyncplayBoot:
         """ Build arguments parser for Syncplay bootstrap. """
         parser = argparse.ArgumentParser(description='Syncplay Docker Bootstrap')
         yield parser.add_argument('-p', '--port', type=int, help='listen port of syncplay server')
-        yield parser.add_argument('--password', type=str, help='authentication of syncplay server')
-        yield parser.add_argument('--motd', type=str, help='welcome text after the user enters the room')
-        yield parser.add_argument('--salt', type=str, help='string used to secure passwords')
+        yield parser.add_argument('--password', metavar='PASSWD', type=str, help='authentication of syncplay server')
+        yield parser.add_argument('--motd', metavar='MESSAGE', type=str, help='welcome text after the user enters the room')
+        yield parser.add_argument('--salt', metavar='TEXT', type=str, help='string used to secure passwords')
         yield parser.add_argument('--random-salt', action='store_true', help='use a randomly generated salt value')
         yield parser.add_argument('--isolate-rooms', action='store_true', help='room isolation enabled')
         yield parser.add_argument('--disable-chat', action='store_true', help='disables the chat feature')
@@ -33,9 +33,11 @@ class SyncplayBoot:
         yield parser.add_argument('--enable-stats', action='store_true', help='enable syncplay server statistics')
         yield parser.add_argument('--enable-tls', action='store_true', help='enable tls support of syncplay server')
         yield parser.add_argument('--persistent', action='store_true', help='enables room persistence')
-        yield parser.add_argument('--max-username', type=int, help='maximum length of usernames')
-        yield parser.add_argument('--max-chat-message', type=int, help='maximum length of chat messages')
-        yield parser.add_argument('--permanent-rooms', type=str, nargs='*', help='permanent rooms of syncplay server')
+        yield parser.add_argument('--max-username', metavar='NUM', type=int, help='maximum length of usernames')
+        yield parser.add_argument('--max-chat-message', metavar='NUM', type=int, help='maximum length of chat messages')
+        yield parser.add_argument('--permanent-rooms', metavar='ROOM', type=str, nargs='*', help='permanent rooms of syncplay server')
+        yield parser.add_argument('--listen-ipv4', metavar='INTERFACE', type=str, help='listening address of ipv4')
+        yield parser.add_argument('--listen-ipv6', metavar='INTERFACE', type=str, help='listening address of ipv6')
         self.__parser = parser
 
     def __build_options(self) -> Generator:
@@ -61,7 +63,7 @@ class SyncplayBoot:
         self.__debug(f'Command line options -> {cli_opts}\n')
 
         self.__opts = env_opts | cfg_opts | cli_opts
-        self.__debug(f'Bootstrap final options -> {self.__opts}')
+        self.__debug(f'Bootstrap final options -> {self.__opts}\n')
 
     def __load_from_args(self, raw_args: list[str]) -> dict[str, Any]:
         """ Loading options from command line arguments. """
@@ -111,7 +113,7 @@ class SyncplayBoot:
             args += ['--salt', salt]  # using random salt without this option
         for opt in ['isolate_rooms', 'disable_chat', 'disable_ready']:
             if opt in self.__opts:
-                args.append(f'--{opt.replace("_", "-")}')
+                args.append(f'--{opt}'.replace('_', '-'))
 
         if 'enable_stats' in self.__opts:
             args += ['--stats-db-file', os.path.join(self.__work_dir, 'stats.db')]
@@ -127,6 +129,14 @@ class SyncplayBoot:
         if 'permanent_rooms' in self.__opts:
             rooms = '\n'.join(self.__opts['permanent_rooms'])
             args += ['--permanent-rooms-file', SyncplayBoot.__temp_file('rooms.list', rooms)]
+
+        if 'listen_ipv4' in self.__opts and 'listen_ipv6' in self.__opts:
+            args += ['--interface-ipv4', self.__opts['listen_ipv4']]
+            args += ['--interface-ipv6', self.__opts['listen_ipv6']]
+        elif 'listen_ipv4' in self.__opts:
+            args += ['--ipv4-only', '--interface-ipv4', self.__opts['listen_ipv4']]
+        elif 'listen_ipv6' in self.__opts:
+            args += ['--ipv6-only', '--interface-ipv6', self.__opts['listen_ipv6']]
 
         self.__debug(f'Syncplay startup arguments -> {args}')
         return args
