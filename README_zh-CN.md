@@ -1,6 +1,6 @@
 ## 快速开始
 
-使用一句命令开启 Syncplay 服务，是的，就这么简单。
+使用一句命令开启 [Syncplay](https://syncplay.pl/) 服务，是的，就这么简单。
 
 ```bash
 > docker run --rm --net=host dnomd343/syncplay

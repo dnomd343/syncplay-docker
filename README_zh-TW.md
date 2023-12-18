@@ -1,6 +1,6 @@
 ## 快速開始
 
-使用壹句命令開啓 Syncplay 服務，是的，就這麽簡單。
+使用壹句命令開啓 [Syncplay](https://syncplay.pl/) 服務，是的，就這麽簡單。
 
 ```bash
 > docker run --rm --net=host dnomd343/syncplay
