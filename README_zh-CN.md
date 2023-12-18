@@ -4,12 +4,12 @@
 
 ```bash
 > docker run --rm --net=host dnomd343/syncplay
-Welcome to Syncplay server, ver. 1.7.0
+Welcome to Syncplay server, ver. 1.7.1
 ```
 
 > 按下 `Ctrl+C` 将退出服务
 
-如果没有意外，您可以在客户端填入服务器 IP 或域名进行验证，默认端口是 `tcp/8999`。若无法连上，请检查您的防火墙设置。
+如果没有意外，您可以在客户端填入服务器 IP 或域名进行验证，默认端口是 `tcp/8999` 。若无法连上，请检查您的防火墙设置。
 
 为了更好地运行服务，我们应当使用以下命令让 Syncplay 在后台运行，并保持启动。
 
@@ -24,13 +24,11 @@ docker run -d --net=host --restart=always --name=syncplay dnomd343/syncplay
 > 注意在按下回车前，您必须执行 `docker rm -f syncplay` 移除掉原有的服务，否则它们会发生冲突。
 
 ```bash
-docker run -d --net=host           \
-  --restart=always --name=syncplay \
-  dnomd343/syncplay --disable-chat \
-  --password=PASSWD --motd='HELLO WORLD'
+docker run -d --net=host --restart=always --name=syncplay dnomd343/syncplay \
+  --disable-chat --password=PASSWD --motd='HELLO WORLD'
 ```
 
-服务器在必要的时候会被重启，也可能是 Docker 服务或 Syncplay 需要更新，无论是不是预期中的，这个时候将 Syncplay 持久化是很有必要的，这意味着房间数据将会被保存到磁盘上。您需要选择一个工作目录来保存他们，例如 `/etc/syncplay/`，执行以下命令，数据会被保存到 `rooms.db` 文件中。
+服务器在必要的时候会被重启，也可能是 Docker 服务需要更新，无论是不是预期中的，这个时候将 Syncplay 持久化是很有必要的，这意味着房间数据将会被保存到磁盘上。您需要选择一个工作目录来保存他们，例如 `/etc/syncplay/`，执行以下命令，数据会被保存到 `rooms.db` 文件中。
 
 ```bash
 docker run -d --net=host           \
@@ -95,7 +93,7 @@ docker run -d --net=host                  \
 
 + `--motd [MESSAGE]` ：用户进入房间的欢迎内容，默认不启用
 
-+ `--salt [SALT]` ：密码加盐，指定随机字符串，用于抵抗哈希攻击（例如彩虹表），默认为空字符串
++ `--salt [TEXT]` ：密码加盐，指定随机字符串，用于抵抗哈希攻击（例如彩虹表），默认为空字符串
 
 + `--random-salt` ：使用随机生成的盐，仅当 `--salt` 未指定时生效，默认不启用
 
@@ -111,31 +109,37 @@ docker run -d --net=host                  \
 
 + `--persistent` ：开启房间数据持久化，信息将被保存到 `rooms.db` 文件中，仅当 `--isolate-rooms` 未指定时有效，默认不启用
 
-+ `--max-username [N]` ：用户名最大长度，默认为 `150`
++ `--max-username [NUM]` ：用户名最大长度，默认为 `150`
 
-+ `--max-chat-message [N]` ：聊天消息最大长度，默认为 `150`
++ `--max-chat-message [NUM]` ：聊天消息最大长度，默认为 `150`
 
 + `--permanent-rooms [ROOM ...]` ：即使播放列表为空时仍会列出的房间，仅当 `--persistent` 指定时有效，默认为空
+
++ `--listen-ipv4` ：自定义 Syncplay 服务在 IPv4 网络上的监听地址，默认不启用
+
++ `--listen-ipv6` ：自定义 Syncplay 服务在 IPv6 网络上的监听地址，默认不启用
+
+> 当您仅指定 `--listen-ipv4` 时，Syncplay 将不会在 IPv6 上监听，反之同理。当两者均指定时，Syncplay 将工作在双栈网络下。
 
 您也可以使用以下命令输出帮助信息。
 
 ```bash
 > docker run --rm syncplay --help
-usage: syncplay [-h] [-p PORT] [--password PASSWORD] [--motd MOTD]
-                [--salt SALT] [--random-salt] [--isolate-rooms]
+usage: syncplay [-h] [-p PORT] [--password PASSWD] [--motd MESSAGE]
+                [--salt TEXT] [--random-salt] [--isolate-rooms]
                 [--disable-chat] [--disable-ready] [--enable-stats]
-                [--enable-tls] [--persistent] [--max-username MAX_USERNAME]
-                [--max-chat-message MAX_CHAT_MESSAGE]
-                [--permanent-rooms [PERMANENT_ROOMS ...]]
+                [--enable-tls] [--persistent] [--max-username NUM]
+                [--max-chat-message NUM] [--permanent-rooms [ROOM ...]]
+                [--listen-ipv4 INTERFACE] [--listen-ipv6 INTERFACE]
 
 Syncplay Docker Bootstrap
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -p PORT, --port PORT  listen port of syncplay server
-  --password PASSWORD   authentication of syncplay server
-  --motd MOTD           welcome text after the user enters the room
-  --salt SALT           string used to secure passwords
+  --password PASSWD     authentication of syncplay server
+  --motd MESSAGE        welcome text after the user enters the room
+  --salt TEXT           string used to secure passwords
   --random-salt         use a randomly generated salt value
   --isolate-rooms       room isolation enabled
   --disable-chat        disables the chat feature
@@ -143,12 +147,15 @@ optional arguments:
   --enable-stats        enable syncplay server statistics
   --enable-tls          enable tls support of syncplay server
   --persistent          enables room persistence
-  --max-username MAX_USERNAME
-                        maximum length of usernames
-  --max-chat-message MAX_CHAT_MESSAGE
+  --max-username NUM    maximum length of usernames
+  --max-chat-message NUM
                         maximum length of chat messages
-  --permanent-rooms [PERMANENT_ROOMS ...]
+  --permanent-rooms [ROOM ...]
                         permanent rooms of syncplay server
+  --listen-ipv4 INTERFACE
+                        listening address of ipv4
+  --listen-ipv6 INTERFACE
+                        listening address of ipv6
 ```
 
 ## 配置文件
@@ -168,6 +175,8 @@ disable-chat: true
 disable-ready: true
 max-username: 256
 max-chat-message: 2048
+listen-ipv4: 127.0.0.1
+listen-ipv6: ::1
 permanent-rooms:
   - ROOM_1
   - ROOM_2
@@ -176,6 +185,18 @@ motd: |
   Hello, here is a syncplay server.
   More information...
 ```
+
+## 环境变量
+
+Syncplay 容器还支持通过环境变量来配置，它支持数字、字符串以及布尔三种类型的字段，这里意味着 `permanent-rooms` 不被支持。环境变量全部使用大写命名，并将 `-` 替换为 `_` ，布尔值使用 `ON` 或者 `TRUE` 表示，下面是一个使用环境变量的例子。
+
+```bash
+docker run -d --net=host --restart=always --name=syncplay \
+  --env PORT=7999 --env MOTD=Hello --env DISABLE_READY=ON \
+  dnomd343/syncplay
+```
+
+您或许已经注意到了，我们支持三种配置方式：命令行参数、配置文件和环境变量，它们的优先级由高到低，也就是命令行参数将覆盖配置文件的选项，配置文件将覆盖环境变量的值，您可以搭配使用它们。
 
 ## Docker Compose
 
@@ -200,7 +221,7 @@ services:
 > docker-compose up
 Recreating syncplay ... done
 Attaching to syncplay
-syncplay    | Welcome to Syncplay server, ver. 1.7.0
+syncplay    | Welcome to Syncplay server, ver. 1.7.1
 ```
 
 > 添加 `-d` 选项可以让服务在后台运行。
@@ -213,11 +234,29 @@ syncplay    | Welcome to Syncplay server, ver. 1.7.0
 
 ```bash
 > docker run --rm --env DEBUG=ON dnomd343/syncplay
-Command line arguments -> Namespace(port=None, password=None, motd=None, salt=None, random_salt=False, isolate_rooms=False, disable_chat=False, disable_ready=False, enable_stats=False, enable_tls=False, persistent=False, max_username=None, max_chat_message=None, permanent_rooms=None)
-Parsed arguments -> {}
+Bootstrap options -> [('port', <class 'int'>, False), ('password', <class 'str'>, False), ('motd', <class 'str'>, False), ('salt', <class 'str'>, False), ('random_salt', <class 'bool'>, False), ('isolate_rooms', <class 'bool'>, False), ('disable_chat', <class 'bool'>, False), ('disable_ready', <class 'bool'>, False), ('enable_stats', <class 'bool'>, False), ('enable_tls', <class 'bool'>, False), ('persistent', <class 'bool'>, False), ('max_username', <class 'int'>, False), ('max_chat_message', <class 'int'>, False), ('permanent_rooms', <class 'str'>, True), ('listen_ipv4', <class 'str'>, False), ('listen_ipv6', <class 'str'>, False)]
+Environment variables -> environ({'PATH': '/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'HOSTNAME': '0a28a2e2ea50', 'DEBUG': 'ON', 'LANG': 'C.UTF-8', 'GPG_KEY': 'A035C8C19219BA821ECEA86B64E628F8D684696D', 'PYTHON_VERSION': '3.10.13', 'PYTHON_PIP_VERSION': '23.0.1', 'PYTHON_SETUPTOOLS_VERSION': '65.5.1', 'PYTHON_GET_PIP_URL': 'https://github.com/pypa/get-pip/raw/4cfa4081d27285bda1220a62a5ebf5b4bd749cdb/public/get-pip.py', 'PYTHON_GET_PIP_SHA256': '9cc01665956d22b3bf057ae8287b035827bfd895da235bcea200ab3b811790b6', 'PYTHONUNBUFFERED': '1', 'HOME': '/root'})
+Environment options -> {}
+Configure file -> {}
+Configure file options -> {}
+Command line arguments -> Namespace(port=None, password=None, motd=None, salt=None, random_salt=False, isolate_rooms=False, disable_chat=False, disable_ready=False, enable_stats=False, enable_tls=False, persistent=False, max_username=None, max_chat_message=None, permanent_rooms=None, listen_ipv4=None, listen_ipv6=None)
+Command line options -> {}
+Bootstrap final options -> {}
 Syncplay startup arguments -> ['--port', '8999', '--salt', '']
-Welcome to Syncplay server, ver. 1.7.0
+Welcome to Syncplay server, ver. 1.7.1
 ```
+
+## 高级选项
+
+出于一些原因，您可能需要更改配置文件或工作目录的位置，这在 Syncplay 容器中是可行的，它需要您使用环境变量来指定。
+
++ `TEMP_DIR` ：临时目录，它不需要被持久化，默认为 `/tmp/`
+
++ `WORK_DIR` ：工作目录，它存储和 Syncplay 相关的数据，默认为 `/data/`
+
++ `CERT_DIR` ：证书目录，它用于存放 TLS 相关的证书和私钥文件，默认为 `/certs/`
+
++ `CONFIG` ：配置文件，它定义引导脚本读取的 YAML 配置，默认为 `config.yml`
 
 ## 容器构建
 
@@ -246,4 +285,4 @@ docker buildx build -t dnomd343/syncplay                    \
 
 ## 许可证
 
-MIT ©2022 [@dnomd343](https://github.com/dnomd343)
+MIT ©2023 [@dnomd343](https://github.com/dnomd343)
