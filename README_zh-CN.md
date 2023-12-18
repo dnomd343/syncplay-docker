@@ -7,7 +7,7 @@
 Welcome to Syncplay server, ver. 1.7.1
 ```
 
-> 按下 `Ctrl+C` 将退出服务
+> 按下 `Ctrl+C` 将退出服务。
 
 如果没有意外，您可以在客户端填入服务器 IP 或域名进行验证，默认端口是 `tcp/8999` 。若无法连上，请检查您的防火墙设置。
 
@@ -28,7 +28,7 @@ docker run -d --net=host --restart=always --name=syncplay dnomd343/syncplay \
   --disable-chat --password=PASSWD --motd='HELLO WORLD'
 ```
 
-服务器在必要的时候会被重启，也可能是 Docker 服务需要更新，无论是不是预期中的，这个时候将 Syncplay 持久化是很有必要的，这意味着房间数据将会被保存到磁盘上。您需要选择一个工作目录来保存他们，例如 `/etc/syncplay/`，执行以下命令，数据会被保存到 `rooms.db` 文件中。
+服务器在必要的时候会被重启，也可能是 Docker 服务需要更新，无论是不是预期中的，这个时候将 Syncplay 持久化是很有必要的，这意味着房间数据将会被保存到磁盘上。您需要选择一个工作目录来保存他们，例如 `/etc/syncplay/` ，执行以下命令，数据会被保存到 `rooms.db` 文件中。
 
 ```bash
 docker run -d --net=host           \
