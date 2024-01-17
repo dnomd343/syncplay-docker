@@ -95,7 +95,8 @@ class SyncplayBoot:
         cli_opts = self.__load_from_args(args)
         self.__debug('Command line options', cli_opts)
 
-        self.__opts = env_opts | cfg_opts | cli_opts
+        options = env_opts | cfg_opts | cli_opts
+        self.__opts = {x: y for x, y in options.items() if y != False}
         self.__debug('Bootstrap final options', self.__opts)
 
     def __load_from_args(self, raw_args: list[str]) -> dict[str, Any]:
