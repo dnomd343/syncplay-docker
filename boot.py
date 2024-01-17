@@ -1,6 +1,35 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+Syncplay Bootstrap using to convert redesigned parameter fields into arguments
+that are non-intrusive to Syncplay Server.
+
+The official arguments of Syncplay are not convenient for container startup,
+especially for file specification scenarios, which can easily confuse people
+who use docker.
+
+Document: https://man.archlinux.org/man/extra/syncplay/syncplay-server.1
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Docker Arguments              ┃ Official Arguments                    ┃
+┠───────────────────────────────╂───────────────────────────────────────┨
+┃ --motd [MESSAGE]              ┃ --motd-file [FILE]                    ┃
+┃ --salt [SALT] & --random-salt ┃ --salt [SALT]                         ┃
+┃ --enable-stats                ┃ --stats-db-file [FILE]                ┃
+┃ --enable-tls                  ┃ --tls [PATH]                          ┃
+┃ --persistent                  ┃ --permanent-rooms-file [FILE]         ┃
+┃ --max-username [NUM]          ┃ --max-username-length [NUM]           ┃
+┃ --max-chat-message [NUM]      ┃ --max-chat-message-length [NUM]       ┃
+┃ --permanent-rooms [ROOM ...]  ┃ --permanent-rooms-file [FILE]         ┃
+┃ --listen-ipv4 [IPv4]          ┃ --ipv4-only & --interface-ipv4 [IPv4] ┃
+┃ --listen-ipv6 [IPv6]          ┃ --ipv6-only & --interface-ipv6 [IPv6] ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+Through this adapter, you no longer need to create files and specify paths, but
+directly configure arguments through the command line or other methods.
+"""
+
 import os
 import sys
 import yaml
