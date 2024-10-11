@@ -19,9 +19,15 @@ RUN mkdir $(basename /usr/local/lib/python3.*/) && cd ./python3.*/ && \
 COPY ./boot.py /release/bin/syncplay
 
 FROM ${PYTHON}
+ARG USER_UID=800
+ARG USER_GID=800
 RUN sh -c '[ $(getconf LONG_BIT) -eq 64 ] || apk add --no-cache libgcc'
 COPY --from=syncplay /release/ /usr/
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8999
 WORKDIR /data/
+RUN addgroup -g "${USER_GID}" -S syncplay && \
+    adduser -u "${USER_UID}" -S syncplay -G syncplay && \
+    chown -R syncplay:syncplay /data
+USER syncplay
 ENTRYPOINT ["syncplay"]
