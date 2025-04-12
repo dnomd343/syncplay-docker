@@ -1,4 +1,4 @@
-ARG PYTHON="python:3.10-alpine3.18"
+ARG PYTHON="python:3.12-alpine3.21"
 
 FROM ${PYTHON} AS builder
 ENV SYNCPLAY="1.7.4"
