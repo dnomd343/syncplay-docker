@@ -3,31 +3,41 @@
 
 """
 Syncplay Bootstrap using to convert redesigned parameter fields into arguments
-that are non-intrusive to Syncplay Server.
+that are non-intrusive to Syncplay Server. It supports command line arguments,
+environment variables, JSON / YAML / TOML configuration input, and process them
+according to priority.
 
-The official arguments of Syncplay are not convenient for container startup,
-especially for file specification scenarios, which can easily confuse people
-who use docker.
+The command line parameters of Syncplay server are not convenient for container
+startup, especially for scenarios that require specified file, which can easily
+confuse people who use docker. Through this adapter, you will no longer need to
+create files and specify paths, but directly configure it through the command
+line or other methods.
 
-Document: https://man.archlinux.org/man/extra/syncplay/syncplay-server.1
+Docs: https://syncplay.pl/guide/server/
+      https://man.archlinux.org/man/extra/syncplay/syncplay-server.1
 
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃ Docker Arguments              ┃ Official Arguments                    ┃
 ┠───────────────────────────────╂───────────────────────────────────────┨
+┃ --config [FILE]               ┃ /                                     ┃
+┠───────────────────────────────╂───────────────────────────────────────┨
+┃ --port [PORT]                 ┃ PASS-THROUGH                          ┃
+┃ --password [PASSWD]           ┃                                       ┃
+┃ --isolate-rooms               ┃                                       ┃
+┃ --disable-chat                ┃                                       ┃
+┃ --disable-ready               ┃                                       ┃
+┠───────────────────────────────╂───────────────────────────────────────┨
 ┃ --motd [MESSAGE]              ┃ --motd-file [FILE]                    ┃
-┃ --salt [SALT] & --random-salt ┃ --salt [SALT]                         ┃
+┃ --salt [TEXT] & --random-salt ┃ --salt [TEXT]                         ┃
 ┃ --enable-stats                ┃ --stats-db-file [FILE]                ┃
 ┃ --enable-tls                  ┃ --tls [PATH]                          ┃
-┃ --persistent                  ┃ --permanent-rooms-file [FILE]         ┃
+┃ --persistent                  ┃ --rooms-db-file [FILE]                ┃
 ┃ --max-username [NUM]          ┃ --max-username-length [NUM]           ┃
 ┃ --max-chat-message [NUM]      ┃ --max-chat-message-length [NUM]       ┃
 ┃ --permanent-rooms [ROOM ...]  ┃ --permanent-rooms-file [FILE]         ┃
-┃ --listen-ipv4 [IPv4]          ┃ --ipv4-only & --interface-ipv4 [IPv4] ┃
-┃ --listen-ipv6 [IPv6]          ┃ --ipv6-only & --interface-ipv6 [IPv6] ┃
+┃ --listen-ipv4 [ADDR]          ┃ --ipv4-only & --interface-ipv4 [ADDR] ┃
+┃ --listen-ipv6 [ADDR]          ┃ --ipv6-only & --interface-ipv6 [ADDR] ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
-Through this adapter, you no longer need to create files and specify paths, but
-directly configure arguments through the command line or other methods.
 """
 
 import os
@@ -56,7 +66,7 @@ class SyncplayBoot:
     def __build_parser(self) -> Generator:
         """ Build arguments parser for Syncplay bootstrap. """
         parser = argparse.ArgumentParser(description='Syncplay Docker Bootstrap')
-        yield parser.add_argument('-p', '--port', type=int, help='listen port of syncplay server')
+        yield parser.add_argument('-p', '--port', metavar="PORT", type=int, help='listen port of syncplay server')
         yield parser.add_argument('--password', metavar='PASSWD', type=str, help='authentication of syncplay server')
         yield parser.add_argument('--motd', metavar='MESSAGE', type=str, help='welcome text after the user enters the room')
         yield parser.add_argument('--salt', metavar='TEXT', type=str, help='string used to secure passwords')
@@ -70,8 +80,8 @@ class SyncplayBoot:
         yield parser.add_argument('--max-username', metavar='NUM', type=int, help='maximum length of usernames')
         yield parser.add_argument('--max-chat-message', metavar='NUM', type=int, help='maximum length of chat messages')
         yield parser.add_argument('--permanent-rooms', metavar='ROOM', type=str, nargs='*', help='permanent rooms of syncplay server')
-        yield parser.add_argument('--listen-ipv4', metavar='INTERFACE', type=str, help='listening address of ipv4')
-        yield parser.add_argument('--listen-ipv6', metavar='INTERFACE', type=str, help='listening address of ipv6')
+        yield parser.add_argument('--listen-ipv4', metavar='ADDR', type=str, help='listening address of ipv4')
+        yield parser.add_argument('--listen-ipv6', metavar='ADDR', type=str, help='listening address of ipv6')
         self.__parser = parser
 
     def __build_options(self) -> Generator:
