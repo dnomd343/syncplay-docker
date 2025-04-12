@@ -115,9 +115,9 @@ docker run -d --net=host                  \
 
 + `--permanent-rooms [ROOM ...]` ：即使播放列表爲空時仍會列出的房間，僅當 `--persistent` 指定時有效，默認爲空
 
-+ `--listen-ipv4` ：自定義 Syncplay 服務在 IPv4 網絡上的監聽地址，默認不啓用
++ `--listen-ipv4 [ADDR]` ：自定義 Syncplay 服務在 IPv4 網絡上的監聽地址，默認不啓用
 
-+ `--listen-ipv6` ：自定義 Syncplay 服務在 IPv6 網絡上的監聽地址，默認不啓用
++ `--listen-ipv6 [ADDR]` ：自定義 Syncplay 服務在 IPv6 網絡上的監聽地址，默認不啓用
 
 > 當您僅指定 `--listen-ipv4` 時，Syncplay 將不會在 IPv6 上監聽，反之同理。當兩者均指定時，Syncplay 將工作在雙棧網絡下。
 

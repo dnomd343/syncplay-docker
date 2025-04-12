@@ -1,6 +1,6 @@
 ## Quick Start
 
-[简体中文](./README_zh-CN.md) | [繁體中文](./README_zh-TW.md) | [日本語](./README_ja-JP.md)
+[简体中文](./docs/README_zh-Hans.md) | [繁體中文](./docs/README_zh-Hant.md) | [日本語](./docs/README_ja.md)
 
 Using one command to start the [Syncplay](https://syncplay.pl/) service. Yes, it's very simple.
 
@@ -117,9 +117,9 @@ You can customize the Syncplay server by specifying the following command line a
 
 + `--permanent-rooms [ROOM ...]` ：Specifies a list of rooms that will still be listed even if their playlist is empty, only valid when `--persistent` is specified, defaults to empty.
 
-+ `--listen-ipv4` ：Customize the listening address of the Syncplay service on the IPv4 network, not enabled by default.
++ `--listen-ipv4 [ADDR]` ：Customize the listening address of the Syncplay service on the IPv4 network, not enabled by default.
 
-+ `--listen-ipv6` ：Customize the listening address of the Syncplay service on the IPv6 network, not enabled by default.
++ `--listen-ipv6 [ADDR]` ：Customize the listening address of the Syncplay service on the IPv6 network, not enabled by default.
 
 > Only when you specify `--listen-ipv4`, Syncplay will not listen on IPv6 and vice versa. When both are specified, Syncplay will work under dual-stack networking.
 
