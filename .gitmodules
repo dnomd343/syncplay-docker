@@ -1,0 +1,3 @@
+[submodule "src/syncplay"]
+	path = src/syncplay
+	url = https://github.com/Syncplay/syncplay.git

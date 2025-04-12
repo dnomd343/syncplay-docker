@@ -1,0 +1,11 @@
+[project]
+name = "syncplay-boot"
+dynamic = ["version"]
+requires-python = "~=3.12"
+dependencies = [
+    "pyyaml>=6.0.2",
+    "syncplay",
+]
+
+[tool.uv.sources]
+syncplay = { path = "./src/syncplay/" }
