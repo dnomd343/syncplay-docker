@@ -42,155 +42,223 @@ Docs: https://syncplay.pl/guide/server/
 
 import os
 import sys
+import json
 import yaml
+import tomllib
 import argparse
-from typing import Any
-from typing import Generator
-from syncplay import ep_server
+
+from types import GenericAlias
+from typing import Any, TypedDict, NotRequired
 
 
-class SyncplayBoot:
-    """ Handle Syncplay bootstrap arguments. """
-    def __debug(self, prefix: str, message: Any) -> None:
-        """ Print out debug information. """
-        if self.__debug_mode:
-            print(f'\033[33m{prefix}\033[0m -> \033[90m{message}\033[0m', file=sys.stderr)
+class SyncplayOptions(TypedDict):
+    config: NotRequired[str]  # special option for loading
+    port: NotRequired[int]
+    password: NotRequired[str]
+    motd: NotRequired[str]
+    salt: NotRequired[str]
+    random_salt: NotRequired[bool]  # bool options must be True when existed
+    isolate_rooms: NotRequired[bool]
+    disable_chat: NotRequired[bool]
+    disable_ready: NotRequired[bool]
+    enable_stats: NotRequired[bool]
+    enable_tls: NotRequired[bool]
+    persistent: NotRequired[bool]
+    max_username: NotRequired[int]
+    max_chat_message: NotRequired[int]
+    permanent_rooms: NotRequired[list[str]]
+    listen_ipv4: NotRequired[str]
+    listen_ipv6: NotRequired[str]
 
-    def __temp_file(self, file: str, content: str) -> str:
+
+DESC = {
+    'config': ('FILE', 'configure file path'),
+    'port': ('PORT', 'listen port of syncplay server'),
+    'password': ('PASSWD', 'authentication of syncplay server'),
+    'motd': ('MESSAGE', 'welcome text after the user enters the room'),
+    'salt': ('TEXT', 'string used to secure passwords'),
+    'random_salt': (None, 'use a randomly generated salt value'),
+    'isolate_rooms': (None, 'room isolation enabled'),
+    'disable_chat': (None, 'disables the chat feature'),
+    'disable_ready': (None, 'disables the readiness indicator feature'),
+    'enable_stats': (None, 'enable syncplay server statistics'),
+    'enable_tls': (None, 'enable tls support of syncplay server'),
+    'persistent': (None, 'enables room persistence'),
+    'max_username': ('NUM', 'maximum length of usernames'),
+    'max_chat_message': ('NUM', 'maximum length of chat messages'),
+    'permanent_rooms': ('ROOM', 'permanent rooms of syncplay server'),
+    'listen_ipv4': ('ADDR', 'listening address of ipv4'),
+    'listen_ipv6': ('ADDR', 'listening address of ipv6'),
+}
+
+ENV_OPTS: dict[str, type] = {}  # for loading env variables
+
+CFG_OPTS: dict[str, tuple[type, bool]] = {}  # for loading configure file
+
+ARG_OPTS: dict[str, dict[str, type | str]] = {}  # for loading command line arguments
+
+
+def debug_msg(prefix: str, message: Any) -> None:
+    """ Output debug message. """
+    if os.environ.get('DEBUG', '').upper() in ['ON', 'TRUE']:
+        print(f'\033[33m{prefix}\033[0m -> \033[90m{message}\033[0m', file=sys.stderr)
+
+
+def build_opts() -> None:
+    """ Build syncplay formatting options. """
+    for name, field in SyncplayOptions.__annotations__.items():
+        field_t, is_list = field.__args__[0], False
+        if type(field_t) is GenericAlias:
+            field_t, is_list = field_t.__args__[0], True  # list[T] -> T
+
+        ENV_OPTS[name] = field_t
+        CFG_OPTS[name] = (field_t, is_list)
+        ARG_OPTS[name] = {'type': field_t, 'metavar': DESC[name][0], 'help': DESC[name][1]}
+
+        if is_list:
+            ENV_OPTS.pop(name)  # not supported in env
+            ARG_OPTS[name]['nargs'] = '*'  # multiple values
+
+        if field_t is bool:
+            ARG_OPTS[name]['action'] = 'store_true'
+            [ARG_OPTS[name].pop(x) for x in ('type', 'metavar')]
+
+    debug_msg('ENV_OPTS', ENV_OPTS)
+    debug_msg('CFG_OPTS', CFG_OPTS)
+    debug_msg('ARG_OPTS', ARG_OPTS)
+
+
+def load_from_env() -> SyncplayOptions:
+    """ Load syncplay options from environment variables. """
+    options: SyncplayOptions = {}
+    for name, field_t in ENV_OPTS.items():
+        if name.upper() in os.environ:
+            value = os.environ[name.upper()]
+            if field_t is str:
+                options[name] = value
+            elif field_t is int:
+                options[name] = int(value)
+            elif field_t is bool:
+                options[name] = value.upper() in ['ON', 'TRUE']
+
+    debug_msg('Environment variables', os.environ)
+    return options
+
+
+def load_from_args() -> SyncplayOptions:
+    """ Load syncplay options from command line arguments. """
+
+    def __build_args(name: str) -> list[str]:
+        match name := name.replace('_', '-'):
+            case 'port': return ['-p', f'--{name}']
+            case _: return [f'--{name}']
+
+    parser = argparse.ArgumentParser(description='Syncplay Docker Bootstrap')
+    for name, opts in ARG_OPTS.items():
+        parser.add_argument(*__build_args(name), **opts)
+
+    args = parser.parse_args(sys.argv[1:])
+    debug_msg('Command line arguments', args)
+    return {x: y for x, y in vars(args).items() if not (y is None or y is False)}
+
+
+def load_from_config(path: str) -> SyncplayOptions:
+    """ Load syncplay options from configure file. """
+
+    def __load_file() -> dict[str, Any]:
+        if not os.path.exists(path):
+            return {}
+        content = open(path).read()
+        if path.endswith('.json'):
+            return json.loads(content)
+        elif path.endswith('.toml'):
+            return tomllib.loads(content)
+        else:
+            return yaml.safe_load(content)  # assume yaml format
+
+    assert type(config := __load_file()) is dict
+    debug_msg('Configure content', config)
+
+    options: SyncplayOptions = {}
+    for key, (field_t, is_list) in CFG_OPTS.items():
+        value = config.get(key.replace('_', '-'), None)
+        if value is not None:
+            if is_list:
+                assert type(value) is list
+                assert all(type(x) == field_t for x in value)
+            else:
+                assert type(value) == field_t
+            options[key] = value
+    return options
+
+
+def convert(opts: SyncplayOptions) -> list[str]:
+    """ Construct the startup arguments for syncplay server. """
+
+    def __temp_file(file: str, content: str) -> str:
         """ Create and save content to temporary files. """
-        file = os.path.join(self.__temp_dir, file)
+        file = os.path.join(temp_dir, file)
         with open(file, 'w', encoding='utf-8') as fp:
             fp.write(content)
         return file
 
-    def __build_parser(self) -> Generator:
-        """ Build arguments parser for Syncplay bootstrap. """
-        parser = argparse.ArgumentParser(description='Syncplay Docker Bootstrap')
-        yield parser.add_argument('-p', '--port', metavar="PORT", type=int, help='listen port of syncplay server')
-        yield parser.add_argument('--password', metavar='PASSWD', type=str, help='authentication of syncplay server')
-        yield parser.add_argument('--motd', metavar='MESSAGE', type=str, help='welcome text after the user enters the room')
-        yield parser.add_argument('--salt', metavar='TEXT', type=str, help='string used to secure passwords')
-        yield parser.add_argument('--random-salt', action='store_true', help='use a randomly generated salt value')
-        yield parser.add_argument('--isolate-rooms', action='store_true', help='room isolation enabled')
-        yield parser.add_argument('--disable-chat', action='store_true', help='disables the chat feature')
-        yield parser.add_argument('--disable-ready', action='store_true', help='disables the readiness indicator feature')
-        yield parser.add_argument('--enable-stats', action='store_true', help='enable syncplay server statistics')
-        yield parser.add_argument('--enable-tls', action='store_true', help='enable tls support of syncplay server')
-        yield parser.add_argument('--persistent', action='store_true', help='enables room persistence')
-        yield parser.add_argument('--max-username', metavar='NUM', type=int, help='maximum length of usernames')
-        yield parser.add_argument('--max-chat-message', metavar='NUM', type=int, help='maximum length of chat messages')
-        yield parser.add_argument('--permanent-rooms', metavar='ROOM', type=str, nargs='*', help='permanent rooms of syncplay server')
-        yield parser.add_argument('--listen-ipv4', metavar='ADDR', type=str, help='listening address of ipv4')
-        yield parser.add_argument('--listen-ipv6', metavar='ADDR', type=str, help='listening address of ipv6')
-        self.__parser = parser
+    temp_dir = os.environ.get('TEMP_DIR', '/tmp/')
+    work_dir = os.environ.get('WORK_DIR', '/data/')
+    cert_dir = os.environ.get('CERT_DIR', '/certs/')
 
-    def __build_options(self) -> Generator:
-        """ Build options list for Syncplay bootstrap. """
-        for action in [x for x in self.__build_parser()]:
-            is_list = type(action.nargs) is str
-            opt_type = bool if action.type is None else action.type
-            yield action.dest, opt_type, is_list
+    args = ['--port', opts.get('port', '8999')]
+    if 'password' in opts:
+        args += ['--password', opts['password']]
+    if 'motd' in opts:
+        args += ['--motd-file', __temp_file('motd.data', opts['motd'])]
 
-    def __init__(self, args: list[str], config: dict[str, Any],
-                 cert_dir: str, temp_dir: str, work_dir: str, debug_mode: bool = False):
-        self.__debug_mode = debug_mode
-        self.__cert_dir, self.__temp_dir, self.__work_dir = cert_dir, temp_dir, work_dir
-        self.__options = [x for x in self.__build_options()]  # list[(NAME, TYPE, IS_LIST)]
-        self.__debug('Bootstrap options', self.__options)
+    salt = opts.get('salt', None if 'random_salt' in opts else '')
+    if salt is not None:
+        args += ['--salt', salt]  # using random salt without this option
+    for opt in ['isolate_rooms', 'disable_chat', 'disable_ready']:
+        if opt in opts:
+            args.append(f'--{opt}'.replace('_', '-'))
 
-        env_opts = self.__load_from_env()
-        self.__debug('Environment options', env_opts)
-        cfg_opts = self.__load_from_config(config)
-        self.__debug('Configure file options', cfg_opts)
-        cli_opts = self.__load_from_args(args)
-        self.__debug('Command line options', cli_opts)
+    if 'enable_stats' in opts:
+        args += ['--stats-db-file', os.path.join(work_dir, 'stats.db')]
+    if 'enable_tls' in opts:
+        args += ['--tls', cert_dir]
+    if 'persistent' in opts:
+        args += ['--rooms-db-file', os.path.join(work_dir, 'rooms.db')]
 
-        options = env_opts | cfg_opts | cli_opts
-        self.__opts = {x: y for x, y in options.items() if y != False}
-        self.__debug('Bootstrap final options', self.__opts)
+    if 'max_username' in opts:
+        args += ['--max-username-length', str(opts['max_username'])]
+    if 'max_chat_message' in opts:
+        args += ['--max-chat-message-length', str(opts['max_chat_message'])]
+    if 'permanent_rooms' in opts:
+        rooms = '\n'.join(opts['permanent_rooms'])
+        args += ['--permanent-rooms-file', __temp_file('rooms.list', rooms)]
 
-    def __load_from_args(self, raw_args: list[str]) -> dict[str, Any]:
-        """ Loading options from command line arguments. """
-        args = self.__parser.parse_args(raw_args)
-        self.__debug('Command line arguments', args)
-        arg_filter = lambda x: x is not None and x is not False
-        return {x: y for x, y in vars(args).items() if arg_filter(y)}
-
-    def __load_from_config(self, config: dict[str, Any]) -> dict[str, Any]:
-        """ Loading options from configure file. """
-        self.__debug('Configure file', config)
-        options = {x[0].replace('_', '-'): x[0] for x in self.__options}
-        return {options[x]: config[x] for x in options if x in config}
-
-    def __load_from_env(self) -> dict[str, Any]:
-        """ Loading options from environment variables. """
-        def __convert(opt_raw: str, opt_field: str, opt_type: type) -> tuple[str, Any]:
-            if opt_type is str:
-                return opt_field, opt_raw
-            elif opt_type is int:
-                return opt_field, int(opt_raw)
-            elif opt_type is bool:
-                return opt_field, opt_raw.upper() in ['ON', 'TRUE']
-
-        self.__debug('Environment variables', os.environ)
-        options = {x.upper(): (x, t) for x, t, is_list in self.__options if not is_list}  # filter non-list options
-        return dict([__convert(os.environ[x], *y) for x, y in options.items() if x in os.environ])
-
-    def release(self) -> list[str]:
-        """ Construct the startup arguments for syncplay server. """
-        args = ['--port', str(self.__opts.get('port', 8999))]
-        if 'password' in self.__opts:
-            args += ['--password', self.__opts['password']]
-        if 'motd' in self.__opts:
-            args += ['--motd-file', self.__temp_file('motd.data', self.__opts['motd'])]
-
-        salt = self.__opts.get('salt', None if 'random_salt' in self.__opts else '')
-        if salt is not None:
-            args += ['--salt', salt]  # using random salt without this option
-        for opt in ['isolate_rooms', 'disable_chat', 'disable_ready']:
-            if opt in self.__opts:
-                args.append(f'--{opt}'.replace('_', '-'))
-
-        if 'enable_stats' in self.__opts:
-            args += ['--stats-db-file', os.path.join(self.__work_dir, 'stats.db')]
-        if 'enable_tls' in self.__opts:
-            args += ['--tls', self.__cert_dir]
-        if 'persistent' in self.__opts:
-            args += ['--rooms-db-file', os.path.join(self.__work_dir, 'rooms.db')]
-
-        if 'max_username' in self.__opts:
-            args += ['--max-username-length', str(self.__opts['max_username'])]
-        if 'max_chat_message' in self.__opts:
-            args += ['--max-chat-message-length', str(self.__opts['max_chat_message'])]
-        if 'permanent_rooms' in self.__opts:
-            rooms = '\n'.join(self.__opts['permanent_rooms'])
-            args += ['--permanent-rooms-file', self.__temp_file('rooms.list', rooms)]
-
-        if 'listen_ipv4' in self.__opts and 'listen_ipv6' in self.__opts:
-            args += ['--interface-ipv4', self.__opts['listen_ipv4']]
-            args += ['--interface-ipv6', self.__opts['listen_ipv6']]
-        elif 'listen_ipv4' in self.__opts:
-            args += ['--ipv4-only', '--interface-ipv4', self.__opts['listen_ipv4']]
-        elif 'listen_ipv6' in self.__opts:
-            args += ['--ipv6-only', '--interface-ipv6', self.__opts['listen_ipv6']]
-
-        self.__debug('Syncplay startup arguments', args)
-        return args
-
-
-def syncplay_boot() -> None:
-    """ Bootstrap the syncplay server. """
-    temp_dir = os.environ.get('TEMP_DIR', '/tmp')
-    work_dir = os.environ.get('WORK_DIR', '/data')
-    cert_dir = os.environ.get('CERT_DIR', '/certs')
-    config_file = os.environ.get('CONFIG', 'config.yml')
-    debug_mode = os.environ.get('DEBUG', '').upper() in ['ON', 'TRUE']
-
-    config = yaml.safe_load(open(config_file).read()) if os.path.exists(config_file) else {}
-    bootstrap = SyncplayBoot(sys.argv[1:], config, cert_dir, temp_dir, work_dir, debug_mode)
-    sys.argv = ['syncplay'] + bootstrap.release()
+    if 'listen_ipv4' in opts and 'listen_ipv6' in opts:
+        args += ['--interface-ipv4', opts['listen_ipv4']]
+        args += ['--interface-ipv6', opts['listen_ipv6']]
+    elif 'listen_ipv4' in opts:
+        args += ['--ipv4-only', '--interface-ipv4', opts['listen_ipv4']]
+    elif 'listen_ipv6' in opts:
+        args += ['--ipv6-only', '--interface-ipv6', opts['listen_ipv6']]
+    return args
 
 
 if __name__ == '__main__':
-    syncplay_boot()
+    build_opts()
+    env_opts = load_from_env()
+    cli_opts = load_from_args()
+    cfg_opts = load_from_config((env_opts | cli_opts).get('config', 'config.yml'))
+
+    debug_msg('Environment options', env_opts)
+    debug_msg('Command line options', cli_opts)
+    debug_msg('Configure file options', cfg_opts)
+
+    final_opts = {x: y for x, y in (env_opts | cfg_opts | cli_opts).items() if y != False}
+    debug_msg('Bootstrap final options', final_opts)
+
+    sys.argv = ['syncplay'] + convert(final_opts)
+    debug_msg('Syncplay startup arguments', sys.argv)
+
+    from syncplay import ep_server
     sys.exit(ep_server.main())
