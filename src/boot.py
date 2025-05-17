@@ -231,7 +231,7 @@ def sp_convert(opts: SyncplayOptions) -> list[str]:
     work_dir = os.environ.get('WORK_DIR', '/data/')
     cert_dir = os.environ.get('CERT_DIR', '/certs/')
 
-    args = ['--port', opts.get('port', '8999')]
+    args = ['--port', f'{opts.get('port', 8999)}']
     if 'password' in opts:
         args += ['--password', opts['password']]
     if 'motd' in opts:

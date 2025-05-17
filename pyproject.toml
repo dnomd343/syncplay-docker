@@ -1,5 +1,11 @@
 [project]
 name = "syncplay-boot"
+description = "Bootstrap of Syncplay server."
+license = "MIT"
+authors = [
+    { name = "Dnomd343", email = "dnomd343@gmail.com" }
+]
+
 dynamic = ["version"]
 requires-python = "~=3.12"
 dependencies = [
@@ -7,5 +13,23 @@ dependencies = [
     "syncplay",
 ]
 
+[dependency-groups]
+dev = [
+    "pyright>=1.1.400",
+    "ruff>=0.11.10",
+]
+
 [tool.uv.sources]
 syncplay = { path = "./src/syncplay/" }
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+lint.select = ["E", "F", "B", "N", "W"]
+lint.ignore = ["E701"]
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+pythonPlatform = "All"
+include = ["src"]
