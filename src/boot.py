@@ -4,8 +4,8 @@
 """
 Syncplay Bootstrap using to convert redesigned parameter fields into arguments
 that are non-intrusive to Syncplay Server. It supports command line arguments,
-environment variables, JSON / YAML / TOML configuration input, and process them
-according to priority.
+environment variables, JSON / YAML / TOML configuration input, and processes
+them according to priority.
 
 The command line parameters of Syncplay server are not convenient for container
 startup, especially for scenarios that require specified file, which can easily
@@ -91,11 +91,11 @@ DESC = {
     'listen_ipv6': ('ADDR', 'listening address of ipv6'),
 }
 
+ARG_OPTS: dict[str, dict] = {}  # for loading cli arguments
+
 ENV_OPTS: dict[str, type] = {}  # for loading env variables
 
 CFG_OPTS: dict[str, tuple[type, bool]] = {}  # for loading configure file
-
-ARG_OPTS: dict[str, dict[str, type | str]] = {}  # for loading command line arguments
 
 
 def debug_msg(prefix: str, message: Any) -> None:
@@ -104,7 +104,7 @@ def debug_msg(prefix: str, message: Any) -> None:
         print(f'\033[33m{prefix}\033[0m -> \033[90m{message}\033[0m', file=sys.stderr)
 
 
-def build_opts() -> None:
+def init_opts() -> None:
     """ Build syncplay formatting options. """
     for name, field in SyncplayOptions.__annotations__.items():
         field_t, is_list = field.__args__[0], False
@@ -148,10 +148,11 @@ def load_from_env() -> SyncplayOptions:
 def load_from_args() -> SyncplayOptions:
     """ Load syncplay options from command line arguments. """
 
-    def __build_args(name: str) -> list[str]:
-        match name := name.replace('_', '-'):
-            case 'port': return ['-p', f'--{name}']
-            case _: return [f'--{name}']
+    def __build_args(opt: str) -> list[str]:
+        match opt := opt.replace('_', '-'):
+            case 'port': return ['-p', f'--{opt}']
+            case 'motd': return ['-m', f'--{opt}']
+            case _: return [f'--{opt}']
 
     parser = argparse.ArgumentParser(description='Syncplay Docker Bootstrap')
     for name, opts in ARG_OPTS.items():
@@ -159,7 +160,13 @@ def load_from_args() -> SyncplayOptions:
 
     args = parser.parse_args(sys.argv[1:])
     debug_msg('Command line arguments', args)
-    return {x: y for x, y in vars(args).items() if not (y is None or y is False)}
+
+    options: SyncplayOptions = {}
+    for arg, value in vars(args).items():
+        if value is None or value is False:
+            continue
+        options[arg] = value
+    return options
 
 
 def load_from_config(path: str) -> SyncplayOptions:
@@ -174,7 +181,7 @@ def load_from_config(path: str) -> SyncplayOptions:
         elif path.endswith('.toml'):
             return tomllib.loads(content)
         else:
-            return yaml.safe_load(content)  # assume yaml format
+            return yaml.safe_load(content)  # assume YAML format
 
     assert type(config := __load_file()) is dict
     debug_msg('Configure content', config)
@@ -185,14 +192,32 @@ def load_from_config(path: str) -> SyncplayOptions:
         if value is not None:
             if is_list:
                 assert type(value) is list
-                assert all(type(x) == field_t for x in value)
+                assert all(type(x) is field_t for x in value)
             else:
-                assert type(value) == field_t
+                assert type(value) is field_t
             options[key] = value
     return options
 
 
-def convert(opts: SyncplayOptions) -> list[str]:
+def load_opts() -> SyncplayOptions:
+    """ Combine syncplay options from multiple source. """
+    env_opts = load_from_env()
+    cli_opts = load_from_args()
+    cfg_opts = load_from_config((env_opts | cli_opts).get('config', 'config.yml'))
+
+    debug_msg('Environment options', env_opts)
+    debug_msg('Command line options', cli_opts)
+    debug_msg('Configure file options', cfg_opts)
+
+    final_opts: SyncplayOptions = {}
+    for opt, value in (env_opts | cfg_opts | cli_opts).items():
+        if type(value) is not bool or value:
+            final_opts[opt] = value
+    debug_msg('Bootstrap final options', final_opts)
+    return final_opts
+
+
+def sp_convert(opts: SyncplayOptions) -> list[str]:
     """ Construct the startup arguments for syncplay server. """
 
     def __temp_file(file: str, content: str) -> str:
@@ -234,7 +259,7 @@ def convert(opts: SyncplayOptions) -> list[str]:
         rooms = '\n'.join(opts['permanent_rooms'])
         args += ['--permanent-rooms-file', __temp_file('rooms.list', rooms)]
 
-    if 'listen_ipv4' in opts and 'listen_ipv6' in opts:
+    if 'listen_ipv4' in opts and 'listen_ipv6' in opts:  # dual stack
         args += ['--interface-ipv4', opts['listen_ipv4']]
         args += ['--interface-ipv6', opts['listen_ipv6']]
     elif 'listen_ipv4' in opts:
@@ -245,19 +270,8 @@ def convert(opts: SyncplayOptions) -> list[str]:
 
 
 if __name__ == '__main__':
-    build_opts()
-    env_opts = load_from_env()
-    cli_opts = load_from_args()
-    cfg_opts = load_from_config((env_opts | cli_opts).get('config', 'config.yml'))
-
-    debug_msg('Environment options', env_opts)
-    debug_msg('Command line options', cli_opts)
-    debug_msg('Configure file options', cfg_opts)
-
-    final_opts = {x: y for x, y in (env_opts | cfg_opts | cli_opts).items() if y != False}
-    debug_msg('Bootstrap final options', final_opts)
-
-    sys.argv = ['syncplay'] + convert(final_opts)
+    init_opts()
+    sys.argv = ['syncplay'] + sp_convert(load_opts())
     debug_msg('Syncplay startup arguments', sys.argv)
 
     from syncplay import ep_server
