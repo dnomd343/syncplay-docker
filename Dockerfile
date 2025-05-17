@@ -6,7 +6,7 @@ RUN sh -c '[ $(getconf LONG_BIT) -eq 64 ] || apk add cargo openssl-dev'
 COPY . /build/
 WORKDIR /build/
 RUN uv tree --frozen && \
-    uv export --frozen --no-emit-package syncplay -o requirements.txt
+    uv export --frozen --no-dev --no-emit-package syncplay -o requirements.txt
 RUN pip wheel --no-deps ./src/syncplay/ --wheel-dir /wheels/ && \
     pip wheel --require-hashes -r requirements.txt --wheel-dir /wheels/
 
