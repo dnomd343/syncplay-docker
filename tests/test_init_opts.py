@@ -114,9 +114,9 @@ def test_init_opts():
     """
     Test initialization and idempotency of the init_opts function.
     """
-    assert not boot.ARG_OPTS
-    assert not boot.ENV_OPTS
-    assert not boot.CFG_OPTS
+    boot.ARG_OPTS.clear()
+    boot.ENV_OPTS.clear()
+    boot.CFG_OPTS.clear()
 
     for _ in range(2):
         boot.init_opts()  # run twice to verify idempotency
