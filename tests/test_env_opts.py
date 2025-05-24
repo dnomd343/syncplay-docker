@@ -16,7 +16,10 @@ def env_cleanup():
     os.environ.clear()
     os.environ['UNKNOWN'] = 'unknown_value'
     os.environ['ANOTHER_UNKNOWN'] = 'something'
+
     yield
+
+    os.environ.clear()
     os.environ.update(env_backup)
 
 
