@@ -36,7 +36,7 @@ def test_env_empty():
         ('max_chat_message', 'MAX_CHAT_MESSAGE'),
     ],
 )
-def test_env_int(name: str, env_tag: str):
+def test_env_single_int(name: str, env_tag: str):
     """
     Test environment variables for single integer option.
     """
@@ -58,7 +58,7 @@ def test_env_int(name: str, env_tag: str):
         ('listen_ipv6', 'LISTEN_IPV6'),
     ],
 )
-def test_env_str(name: str, env_tag: str):
+def test_env_single_str(name: str, env_tag: str):
     """
     Test environment variables for single string option.
     """
@@ -81,7 +81,7 @@ def test_env_str(name: str, env_tag: str):
         ('persistent', 'PERSISTENT'),
     ],
 )
-def test_env_bool(name: str, env_tag: str):
+def test_env_single_bool(name: str, env_tag: str):
     """
     Test environment variables for single boolean option.
     """
