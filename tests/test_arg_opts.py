@@ -36,7 +36,7 @@ def test_args_empty():
 )
 def test_args_single_int(name: str, arg_tag: str):
     """
-    Test command line arguments for single integer option.
+    Test command line arguments of single integer option.
     """
     sys.argv += [arg_tag, '0']
     assert boot.load_from_args() == {name: 0}
@@ -58,7 +58,7 @@ def test_args_single_int(name: str, arg_tag: str):
 )
 def test_args_single_str(name: str, arg_tag: str):
     """
-    Test command line arguments for single string option.
+    Test command line arguments of single string option.
     """
     sys.argv += [arg_tag, '']
     assert boot.load_from_args() == {name: ''}
@@ -81,7 +81,7 @@ def test_args_single_str(name: str, arg_tag: str):
 )
 def test_args_single_bool(name: str, arg_tag: str):
     """
-    Test command line arguments for single boolean option.
+    Test command line arguments of single boolean option.
     """
     sys.argv += [arg_tag]
     assert boot.load_from_args() == {name: True}
