@@ -19,6 +19,10 @@ def verify_config(data: dict, excepted: dict) -> None:
     """
     Verify configure loading from different sequence formats.
     """
+    data |= {
+        'unknown': 'unknown_value',
+        'another_unknown': 'another_unknown_value',
+    }
     files = {
         '.json': json.dumps(data),
         '.toml': toml.dumps(data),
@@ -32,7 +36,7 @@ def verify_config(data: dict, excepted: dict) -> None:
             assert boot.load_from_config(fp.name) == excepted
 
 
-def test_config_empty():
+def test_config_empty() -> None:
     """
     Test configuration file in the empty case.
     """
@@ -47,7 +51,7 @@ def test_config_empty():
         ('max_chat_message', 'max-chat-message'),
     ],
 )
-def test_config_single_int(name: str, cfg_tag: str):
+def test_config_single_int(name: str, cfg_tag: str) -> None:
     """
     Test configuration file of single integer option.
     """
@@ -66,7 +70,7 @@ def test_config_single_int(name: str, cfg_tag: str):
         ('listen_ipv6', 'listen-ipv6'),
     ],
 )
-def test_config_single_str(name: str, cfg_tag: str):
+def test_config_single_str(name: str, cfg_tag: str) -> None:
     """
     Test configuration file of single string option.
     """
@@ -86,7 +90,7 @@ def test_config_single_str(name: str, cfg_tag: str):
         ('persistent', 'persistent'),
     ],
 )
-def test_config_single_bool(name: str, cfg_tag: str):
+def test_config_single_bool(name: str, cfg_tag: str) -> None:
     """
     Test configuration file of single boolean option.
     """
