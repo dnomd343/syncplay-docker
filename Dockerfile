@@ -2,8 +2,8 @@ ARG PYTHON="python:3.12-alpine3.21"
 ARG RUNAS="root"
 
 FROM ${PYTHON} AS builder
-RUN apk add uv gcc musl-dev libffi-dev
-RUN sh -c '[ $(getconf LONG_BIT) -eq 64 ] || apk add cargo openssl-dev'
+RUN apk add uv
+RUN sh -c '[ $(getconf LONG_BIT) -eq 64 ] || apk add gcc cargo musl-dev libffi-dev openssl-dev'
 COPY . /build/
 WORKDIR /build/
 RUN uv tree --frozen && \
