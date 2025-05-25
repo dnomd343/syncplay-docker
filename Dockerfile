@@ -20,15 +20,14 @@ RUN --mount=type=cache,ro,from=builder,source=/wheels/,target=/wheels/ \
 COPY ./src/boot.py /usr/bin/syncplay
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8999
-WORKDIR /data/
 
 FROM root AS user
 ARG USER_UID=800
 ARG USER_GID=800
 RUN addgroup -g "${USER_GID}" -S syncplay && \
-    adduser -u "${USER_UID}" -S syncplay -G syncplay && \
-    chown -R syncplay:syncplay /data
+    adduser -u "${USER_UID}" -S syncplay -G syncplay
 USER syncplay
 
 FROM ${RUNAS}
+WORKDIR /data/
 ENTRYPOINT ["syncplay"]
