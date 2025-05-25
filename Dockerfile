@@ -12,7 +12,7 @@ RUN pip wheel --no-deps ./src/syncplay/ --wheel-dir /wheels/ && \
     pip wheel --require-hashes -r requirements.txt --wheel-dir /wheels/
 
 FROM ${PYTHON} AS root
-RUN sh -c '[ $(getconf LONG_BIT) -eq 64 ] || apk add --no-cache libgcc'
+RUN sh -c '[ $(apk info -e libgcc) ] || apk add --no-cache libgcc'
 RUN --mount=type=cache,ro,from=builder,source=/wheels/,target=/wheels/ \
     cd /usr/local/lib/python3.*/ && ls /wheels/*.whl | xargs -P0 -n1 unzip -d ./site-packages/
 COPY ./src/boot.py /usr/bin/syncplay
