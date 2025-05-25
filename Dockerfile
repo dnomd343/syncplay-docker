@@ -4,17 +4,19 @@ ARG RUNAS="root"
 FROM ${PYTHON} AS builder
 RUN apk add uv
 RUN sh -c '[ $(getconf LONG_BIT) -eq 64 ] || apk add gcc cargo musl-dev libffi-dev openssl-dev'
-COPY . /build/
 WORKDIR /build/
-RUN uv tree --frozen && \
-    uv export --frozen --no-dev --no-emit-package syncplay -o requirements.txt
-RUN pip wheel --no-deps ./src/syncplay/ --wheel-dir /wheels/ && \
-    pip wheel --require-hashes -r requirements.txt --wheel-dir /wheels/
+RUN --mount=type=bind,ro,source=uv.lock,target=uv.lock \
+    --mount=type=bind,ro,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,rw,source=./src/syncplay/,target=./src/syncplay/ \
+    uv tree --frozen && \
+    uv export --frozen --no-dev --no-emit-package syncplay -o requirements.txt && \
+    pip wheel --require-hashes -r requirements.txt --wheel-dir /wheels/ && \
+    pip wheel --no-deps ./src/syncplay/ --wheel-dir /wheels/
 
 FROM ${PYTHON} AS root
 RUN sh -c '[ $(apk info -e libgcc) ] || apk add --no-cache libgcc'
 RUN --mount=type=cache,ro,from=builder,source=/wheels/,target=/wheels/ \
-    cd /usr/local/lib/python3.*/ && ls /wheels/*.whl | xargs -P0 -n1 unzip -d ./site-packages/
+    cd /usr/local/lib/python3.*/ && ls /wheels/*.whl | xargs -P0 -n1 unzip -qd ./site-packages/
 COPY ./src/boot.py /usr/bin/syncplay
 ENV PYTHONUNBUFFERED=1
 EXPOSE 8999
