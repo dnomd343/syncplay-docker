@@ -158,8 +158,10 @@ def load_from_args() -> SyncplayOptions:
 
     def __build_args(opt: str) -> list[str]:
         match opt := opt.replace('_', '-'):
+            case 'config': return ['-c', f'--{opt}']
             case 'port': return ['-p', f'--{opt}']
             case 'motd': return ['-m', f'--{opt}']
+            case 'password': return ['-k', f'--{opt}']
             case _: return [f'--{opt}']
 
     parser = argparse.ArgumentParser(description='Syncplay Docker Bootstrap')
