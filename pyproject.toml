@@ -1,3 +1,7 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "syncplay-boot"
 description = "Bootstrap of Syncplay server."
@@ -8,6 +12,8 @@ authors = [
 
 dynamic = ["version"]
 requires-python = "~=3.12"
+scripts.sp_boot = "syncplay_boot:boot"
+
 dependencies = [
     "pyyaml>=6.0.2",
     "syncplay",
@@ -35,3 +41,9 @@ pythonVersion = "3.12"
 typeCheckingMode = "basic"
 pythonPlatform = "All"
 include = ["src"]
+
+[tool.hatch.version]
+path = "src/syncplay/syncplay/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/syncplay_boot"]
