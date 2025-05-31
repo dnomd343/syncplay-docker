@@ -10,6 +10,7 @@ RUN --mount=type=bind,rw,source=./src/,target=./src/ \
     uv tree --frozen && \
     uv export --frozen --no-dev --no-emit-package syncplay -o requirements.txt && \
     pip wheel --require-hashes -r requirements.txt --wheel-dir /wheels/ && \
+    sed -i '/ep_client/s/ =/-client =/g; s/requirements_gui.txt/\/dev\/null/g' ./src/syncplay/setup.py && \
     pip wheel --no-deps ./src/syncplay/ --wheel-dir /wheels/ && \
     uv build --wheel -o /wheels/
 
@@ -28,4 +29,4 @@ USER ${USER_UID}:${USER_GID}
 EXPOSE 8999
 WORKDIR /data/
 ENV PYTHONUNBUFFERED=1
-ENTRYPOINT ["sp_boot"]
+ENTRYPOINT ["syncplay"]

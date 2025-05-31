@@ -12,7 +12,7 @@ authors = [
 
 dynamic = ["version"]
 requires-python = "~=3.12"
-scripts.sp_boot = "syncplay_boot:boot"
+scripts.syncplay = "syncplay_boot:boot"
 
 dependencies = [
     "pyyaml>=6.0.2",
