@@ -46,6 +46,8 @@ import json
 import yaml
 import tomllib
 import argparse
+import platform
+import syncplay
 
 from types import GenericAlias
 from typing import Any, TypedDict, NotRequired
@@ -148,6 +150,12 @@ def load_from_env() -> SyncplayOptions:
 def load_from_args() -> SyncplayOptions:
     """ Load syncplay options from command line arguments. """
 
+    def __version_msg() -> str:
+        python_ver = f'{platform.python_implementation()} {platform.python_version()}'
+        return (f'{parser.description} v{syncplay.version} '
+                f'({syncplay.milestone} {syncplay.release_number}) '
+                f'[{python_ver} {platform.machine()}]')
+
     def __build_args(opt: str) -> list[str]:
         match opt := opt.replace('_', '-'):
             case 'port': return ['-p', f'--{opt}']
@@ -155,6 +163,7 @@ def load_from_args() -> SyncplayOptions:
             case _: return [f'--{opt}']
 
     parser = argparse.ArgumentParser(description='Syncplay Docker Bootstrap')
+    parser.add_argument('-v', '--version', action='version', version=__version_msg())
     for name, opts in ARG_OPTS.items():
         parser.add_argument(*__build_args(name), **opts)
 
