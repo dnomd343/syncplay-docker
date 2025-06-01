@@ -21,6 +21,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "black>=25.1.0",
     "pyright>=1.1.400",
     "pytest>=8.3.5",
     "ruff>=0.11.10",
@@ -28,19 +29,28 @@ dev = [
 ]
 
 [tool.uv.sources]
-syncplay = { path = "./src/syncplay/" }
+syncplay = { path = "src/syncplay" }
 
 [tool.ruff]
 line-length = 120
 target-version = "py312"
 lint.select = ["E", "F", "B", "N", "W"]
-lint.ignore = ["E701"]
+exclude = ["src/syncplay"]
+
+[tool.black]
+line-length = 120
+target-version = ["py312"]
+skip-string-normalization = true
+include = "(src/syncplay_boot|tests)"
 
 [tool.pyright]
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 pythonPlatform = "All"
-include = ["src"]
+include = [
+  "src/syncplay_boot",
+  "tests",
+]
 
 [tool.hatch.version]
 path = "src/syncplay/syncplay/__init__.py"

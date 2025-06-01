@@ -101,13 +101,17 @@ CFG_OPTS: dict[str, tuple[type, bool]] = {}  # for loading configure file
 
 
 def debug_msg(prefix: str, message: Any) -> None:
-    """ Output debug message. """
+    """
+    Output debug message.
+    """
     if os.environ.get('DEBUG', '').upper() in ['ON', 'TRUE']:
         print(f'\033[33m{prefix}\033[0m -> \033[90m{message}\033[0m', file=sys.stderr)
 
 
 def init_opts() -> None:
-    """ Build syncplay formatting options. """
+    """
+    Build syncplay formatting options.
+    """
     for name, field in SyncplayOptions.__annotations__.items():
         field_t, is_list = field.__args__[0], False
         if type(field_t) is GenericAlias:
@@ -131,7 +135,9 @@ def init_opts() -> None:
 
 
 def load_from_env() -> SyncplayOptions:
-    """ Load syncplay options from environment variables. """
+    """
+    Load syncplay options from environment variables.
+    """
     options: SyncplayOptions = {}
     for name, field_t in ENV_OPTS.items():
         if name.upper() in os.environ:
@@ -148,21 +154,30 @@ def load_from_env() -> SyncplayOptions:
 
 
 def load_from_args() -> SyncplayOptions:
-    """ Load syncplay options from command line arguments. """
+    """
+    Load syncplay options from command line arguments.
+    """
 
     def __version_msg() -> str:
         python_ver = f'{platform.python_implementation()} {platform.python_version()}'
-        return (f'{parser.description} v{syncplay.version} '
-                f'({syncplay.milestone} {syncplay.release_number}) '
-                f'[{python_ver} {platform.machine()}]')
+        return (
+            f'{parser.description} v{syncplay.version} '
+            f'({syncplay.milestone} {syncplay.release_number}) '
+            f'[{python_ver} {platform.machine()}]'
+        )
 
     def __build_args(opt: str) -> list[str]:
         match opt := opt.replace('_', '-'):
-            case 'config': return ['-c', f'--{opt}']
-            case 'port': return ['-p', f'--{opt}']
-            case 'motd': return ['-m', f'--{opt}']
-            case 'password': return ['-k', f'--{opt}']
-            case _: return [f'--{opt}']
+            case 'config':
+                return ['-c', f'--{opt}']
+            case 'port':
+                return ['-p', f'--{opt}']
+            case 'motd':
+                return ['-m', f'--{opt}']
+            case 'password':
+                return ['-k', f'--{opt}']
+            case _:
+                return [f'--{opt}']
 
     parser = argparse.ArgumentParser(description='Syncplay Docker Bootstrap')
     parser.add_argument('-v', '--version', action='version', version=__version_msg())
@@ -181,7 +196,9 @@ def load_from_args() -> SyncplayOptions:
 
 
 def load_from_config(path: str) -> SyncplayOptions:
-    """ Load syncplay options from configure file. """
+    """
+    Load syncplay options from configure file.
+    """
 
     def __load_file() -> dict[str, Any]:
         if not os.path.exists(path):
@@ -211,7 +228,9 @@ def load_from_config(path: str) -> SyncplayOptions:
 
 
 def load_opts() -> SyncplayOptions:
-    """ Combine syncplay options from multiple source. """
+    """
+    Combine syncplay options from multiple source.
+    """
     env_opts = load_from_env()
     cli_opts = load_from_args()
     cfg_opts = load_from_config((env_opts | cli_opts).get('config', 'config.yml'))
@@ -229,10 +248,14 @@ def load_opts() -> SyncplayOptions:
 
 
 def sp_convert(opts: SyncplayOptions) -> list[str]:
-    """ Construct the startup arguments for syncplay server. """
+    """
+    Construct the startup arguments for syncplay server.
+    """
 
     def __temp_file(file: str, content: str) -> str:
-        """ Create and save content to temporary files. """
+        """
+        Create and save content to temporary files.
+        """
         file = os.path.join(temp_dir, file)
         with open(file, 'w', encoding='utf-8') as fp:
             fp.write(content)
@@ -288,6 +311,7 @@ def bootstrap(opts: SyncplayOptions | None = None) -> None:
     debug_msg('Syncplay startup arguments', sys.argv)
 
     from syncplay import ep_server
+
     sys.exit(ep_server.main())
 
 

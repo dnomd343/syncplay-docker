@@ -35,12 +35,12 @@ def convert_builder(keep_port: bool = False, keep_salt: bool = False) -> Callabl
         if not keep_port:
             if '--port' in output and '8999' in output:
                 if (index := output.index('--port')) + 1 == output.index('8999'):
-                    output = output[:index] + output[index + 2:]
+                    output = output[:index] + output[index + 2 :]
 
         if not keep_salt:
             if '--salt' in output and '' in output:
                 if (index := output.index('--salt')) + 1 == output.index(''):
-                    output = output[:index] + output[index + 2:]
+                    output = output[:index] + output[index + 2 :]
 
         return output
 
@@ -96,9 +96,9 @@ def test_boolean_flags() -> None:
     Test boolean flags handling of options conversion.
     """
     convert = convert_builder()
-    assert convert({'isolate_rooms': True}) == [f'--isolate-rooms']
-    assert convert({'disable_chat': True}) == [f'--disable-chat']
-    assert convert({'disable_ready': True}) == [f'--disable-ready']
+    assert convert({'isolate_rooms': True}) == ['--isolate-rooms']
+    assert convert({'disable_chat': True}) == ['--disable-chat']
+    assert convert({'disable_ready': True}) == ['--disable-ready']
 
     assert convert({'enable_stats': True}) == ['--stats-db-file', '/data/stats.db']
     assert convert({'enable_tls': True}) == ['--tls', '/certs/']
@@ -132,8 +132,12 @@ def test_ip_configure() -> None:
     convert = convert_builder()
     assert convert({}) == []
     assert convert({'listen_ipv4': '0.0.0.0'}) == ['--ipv4-only', '--interface-ipv4', '0.0.0.0']
-    assert convert({'listen_ipv6': '::'}) == ['--ipv6-only', '--interface-ipv6', '::']
-    assert convert({'listen_ipv4': '0.0.0.0', 'listen_ipv6': '::'}) == ['--interface-ipv4', '0.0.0.0', '--interface-ipv6', '::']
+    assert convert({'listen_ipv6': 'fc00::1'}) == ['--ipv6-only', '--interface-ipv6', 'fc00::1']
+    # fmt: off
+    assert convert({'listen_ipv4': '0.0.0.0', 'listen_ipv6': 'fc00::1'}) == [
+        '--interface-ipv4', '0.0.0.0',
+        '--interface-ipv6', 'fc00::1',
+    ]  # fmt: on
 
 
 def test_path_env(temp_dir_setup) -> None:
@@ -157,7 +161,7 @@ def test_full_options() -> None:
     Test full options conversion.
     """
     convert = convert_builder(keep_port=True, keep_salt=True)
-    options = convert({
+    opts: boot.SyncplayOptions = {
         'port': 12345,
         'password': 'secret',
         'motd': 'Welcome to Syncplay',
@@ -173,9 +177,9 @@ def test_full_options() -> None:
         'max_chat_message': 500,
         'permanent_rooms': ['room1', 'room2', 'room3'],
         'listen_ipv4': '0.0.0.0',
-        'listen_ipv6': '::'
-    })
-
+        'listen_ipv6': '::',
+    }
+    # fmt: off
     expected = [
         '--port', '12345',
         '--password', 'secret',
@@ -192,6 +196,6 @@ def test_full_options() -> None:
         '--permanent-rooms-file', '/tmp/rooms.list',
         '--interface-ipv4', '0.0.0.0',
         '--interface-ipv6', '::'
-    ]
+    ]  # fmt: on
 
-    assert options == expected
+    assert convert(opts) == expected
