@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from src import boot
 from types import GenericAlias
 from typing import NotRequired
-from src.boot import SyncplayOptions
+import syncplay_boot.boot as boot
 
 
 def test_options():
     """
     Verify types and structure of SyncplayOptions and DESC.
     """
-    assert len(SyncplayOptions.__annotations__) == len(boot.DESC)
-    assert set(SyncplayOptions.__annotations__) == set(boot.DESC)
+    assert len(boot.SyncplayOptions.__annotations__) == len(boot.DESC)
+    assert set(boot.SyncplayOptions.__annotations__) == set(boot.DESC)
 
     for tag, desc in boot.DESC.values():
         assert tag is None or type(tag) is str
         assert type(desc) is str
 
-    for field in SyncplayOptions.__annotations__.values():
+    for field in boot.SyncplayOptions.__annotations__.values():
         assert field.__origin__ is NotRequired
         assert len(field.__args__) == 1
 

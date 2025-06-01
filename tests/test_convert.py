@@ -4,8 +4,8 @@
 import os
 import pytest
 import tempfile
-from src import boot
 from typing import Callable
+import syncplay_boot.boot as boot
 from unittest.mock import patch, mock_open
 
 
@@ -65,7 +65,7 @@ def test_password() -> None:
     assert convert({'password': 'PWD'}) == ['--password', 'PWD']  # custom password
 
 
-@patch('src.boot.open', new_callable=mock_open)
+@patch('syncplay_boot.boot.open', new_callable=mock_open)
 def test_motd(mock_file) -> None:
     """
     Test motd field of options conversion.
@@ -114,7 +114,7 @@ def test_limited_values() -> None:
     assert convert({'max_chat_message': 500}) == ['--max-chat-message-length', '500']
 
 
-@patch('src.boot.open', new_callable=mock_open)
+@patch('syncplay_boot.boot.open', new_callable=mock_open)
 def test_permanent_rooms(mock_file) -> None:
     """
     Test permanent rooms field of options conversion.

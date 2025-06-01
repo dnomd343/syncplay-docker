@@ -3,7 +3,7 @@
 
 import os
 import pytest
-from src import boot
+import syncplay_boot.boot as boot
 
 
 @pytest.fixture(autouse=True)

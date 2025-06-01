@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import src.boot as boot
 from unittest.mock import patch
+import syncplay_boot.boot as boot
 
 
 @pytest.fixture(autouse=True)
@@ -12,9 +12,9 @@ def init_opts():
     yield
 
 
-@patch('src.boot.load_from_config')
-@patch('src.boot.load_from_args')
-@patch('src.boot.load_from_env')
+@patch('syncplay_boot.boot.load_from_config')
+@patch('syncplay_boot.boot.load_from_args')
+@patch('syncplay_boot.boot.load_from_env')
 def test_config_priority(mock_env, mock_arg, mock_cfg) -> None:
     """
     Test configure file loading priority order.
@@ -35,9 +35,9 @@ def test_config_priority(mock_env, mock_arg, mock_cfg) -> None:
     mock_cfg.assert_called_with('arg_config.yml')  # higher priority than env
 
 
-@patch('src.boot.load_from_config')
-@patch('src.boot.load_from_args')
-@patch('src.boot.load_from_env')
+@patch('syncplay_boot.boot.load_from_config')
+@patch('syncplay_boot.boot.load_from_args')
+@patch('syncplay_boot.boot.load_from_env')
 def test_merge_priority(mock_env, mock_arg, mock_cfg) -> None:
     """
     Test the merge priority order among env, cli and config options.
@@ -89,9 +89,9 @@ def test_merge_priority(mock_env, mock_arg, mock_cfg) -> None:
     assert boot.load_opts() == expected_opts  # cfg < arg
 
 
-@patch('src.boot.load_from_config')
-@patch('src.boot.load_from_args')
-@patch('src.boot.load_from_env')
+@patch('syncplay_boot.boot.load_from_config')
+@patch('syncplay_boot.boot.load_from_args')
+@patch('syncplay_boot.boot.load_from_env')
 def test_bool_options(mock_env, mock_arg, mock_cfg) -> None:
     """
     Test bool options handling and non-bool retention.

@@ -280,9 +280,11 @@ def sp_convert(opts: SyncplayOptions) -> list[str]:
     return args
 
 
-def boot() -> None:
-    init_opts()
-    sys.argv = ['syncplay'] + sp_convert(load_opts())
+def bootstrap(opts: SyncplayOptions | None = None) -> None:
+    if opts is None:
+        init_opts()
+        opts = load_opts()
+    sys.argv = ['syncplay'] + sp_convert(opts)
     debug_msg('Syncplay startup arguments', sys.argv)
 
     from syncplay import ep_server
@@ -290,4 +292,4 @@ def boot() -> None:
 
 
 if __name__ == '__main__':
-    boot()
+    bootstrap()

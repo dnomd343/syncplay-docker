@@ -6,7 +6,7 @@ import toml
 import yaml
 import pytest
 import tempfile
-from src import boot
+import syncplay_boot.boot as boot
 
 
 @pytest.fixture(autouse=True)
