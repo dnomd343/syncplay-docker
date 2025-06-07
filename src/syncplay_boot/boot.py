@@ -92,6 +92,8 @@ DESC = {
     'listen_ipv4': ('ADDR', 'listening address of ipv4'),
     'listen_ipv6': ('ADDR', 'listening address of ipv6'),
 }
+HELP_DESC = 'show this help message and exit'
+VER_DESC = 'show program\'s version number and exit'
 
 ARG_OPTS: dict[str, dict] = {}  # for loading cli arguments
 
@@ -179,8 +181,9 @@ def load_from_args() -> SyncplayOptions:
             case _:
                 return [f'--{opt}']
 
-    parser = argparse.ArgumentParser(description='Syncplay Docker Bootstrap')
-    parser.add_argument('-v', '--version', action='version', version=__version_msg())
+    parser = argparse.ArgumentParser(description='Syncplay Docker Bootstrap', add_help=False)
+    parser.add_argument('-h', '--help', action='help', help=HELP_DESC)
+    parser.add_argument('-v', '--version', action='version', version=__version_msg(), help=VER_DESC)
     for name, opts in ARG_OPTS.items():
         parser.add_argument(*__build_args(name), **opts)
 
