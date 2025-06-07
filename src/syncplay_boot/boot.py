@@ -90,13 +90,15 @@ DESC = {
     ),
     'persistent': (
         None,
-        'Enable room data persistence, the information will be saved to the `rooms.db` file, only valid when `--isolate-rooms` is not specified.',
+        'Enable room data persistence, the information will be saved to the `rooms.db` file, only valid when '
+        '`--isolate-rooms` is not specified.',
     ),
     'max_username': ('NUM', 'Maximum length of usernames, default is 16.'),
     'max_chat_message': ('NUM', 'Maximum length of chat messages, default is 150.'),
     'permanent_rooms': (
         'ROOM',
-        'Specifies a list of rooms that will still be listed even if their playlist is empty, only valid when `--persistent` is specified, defaults to empty.',
+        'Specifies a list of rooms that will still be listed even if their playlist is empty, only valid when '
+        '`--persistent` is specified, defaults to empty.',
     ),
     'listen_ipv4': ('ADDR', 'Listening address of Syncplay service on IPv4.'),
     'listen_ipv6': ('ADDR', 'Listening address of Syncplay service on IPv6.'),
