@@ -98,6 +98,21 @@ def test_config_single_bool(name: str, cfg_tag: str) -> None:
     verify_config({cfg_tag: False}, {name: False})
 
 
+@pytest.mark.parametrize(
+    'name, cfg_tag',
+    [
+        ('permanent_rooms', 'permanent-rooms'),
+    ],
+)
+def test_config_str_list(name: str, cfg_tag: str) -> None:
+    """
+    Test configuration file of string list option.
+    """
+    verify_config({cfg_tag: []}, {name: []})
+    verify_config({cfg_tag: ['VALUE']}, {name: ['VALUE']})
+    verify_config({cfg_tag: ['V1', 'V2', 'V3']}, {name: ['V1', 'V2', 'V3']})
+
+
 def test_config_full():
     """
     Test all configuration file options.

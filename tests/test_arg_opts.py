@@ -87,6 +87,26 @@ def test_args_single_bool(name: str, arg_tag: str):
     assert boot.load_from_args() == {name: True}
 
 
+@pytest.mark.parametrize(
+    'name, arg_tag',
+    [
+        ('permanent_rooms', '--permanent-rooms'),
+    ],
+)
+def test_args_str_list(name: str, arg_tag: str) -> None:
+    """
+    Test command line arguments of string list option.
+    """
+    sys.argv += [arg_tag]
+    assert boot.load_from_args() == {name: []}
+
+    sys.argv += [arg_tag, 'VALUE']
+    assert boot.load_from_args() == {name: ['VALUE']}
+
+    sys.argv += [arg_tag, 'V1', 'V2', 'V3']
+    assert boot.load_from_args() == {name: ['V1', 'V2', 'V3']}
+
+
 def test_args_full():
     """
     Test all command line arguments options.
