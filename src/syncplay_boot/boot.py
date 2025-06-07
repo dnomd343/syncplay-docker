@@ -74,26 +74,35 @@ class SyncplayOptions(TypedDict):
 
 
 DESC = {
-    'config': ('FILE', 'configure file path'),
-    'port': ('PORT', 'listen port of syncplay server'),
-    'password': ('PASSWD', 'authentication of syncplay server'),
-    'motd': ('MESSAGE', 'welcome text after the user enters the room'),
-    'salt': ('TEXT', 'string used to secure passwords'),
-    'random_salt': (None, 'use a randomly generated salt value'),
-    'isolate_rooms': (None, 'room isolation enabled'),
-    'disable_chat': (None, 'disables the chat feature'),
-    'disable_ready': (None, 'disables the readiness indicator feature'),
-    'enable_stats': (None, 'enable syncplay server statistics'),
-    'enable_tls': (None, 'enable tls support of syncplay server'),
-    'persistent': (None, 'enables room persistence'),
-    'max_username': ('NUM', 'maximum length of usernames'),
-    'max_chat_message': ('NUM', 'maximum length of chat messages'),
-    'permanent_rooms': ('ROOM', 'permanent rooms of syncplay server'),
-    'listen_ipv4': ('ADDR', 'listening address of ipv4'),
-    'listen_ipv6': ('ADDR', 'listening address of ipv6'),
+    'config': ('FILE', 'Specify the configuration file path, the default is `config.yml`.'),
+    'port': ('PORT', 'Listening port of Syncplay service, the default is 8999.'),
+    'password': ('PASSWD', 'Authentication when connecting to the server.'),
+    'motd': ('MESSAGE', 'The welcome text after the user enters the room.'),
+    'salt': ('TEXT', 'A string used to secure passwords, defaults to empty.'),
+    'random_salt': (None, 'Use a randomly generated salt value, valid when `--salt` is not specified.'),
+    'isolate_rooms': (None, 'Enable room isolation, users cannot see information from anyone outside their room.'),
+    'disable_chat': (None, 'Disables the chat feature.'),
+    'disable_ready': (None, 'Disables the readiness indicator feature.'),
+    'enable_stats': (None, 'Enable the server statistics feature, the data will be saved in the `stats.db` file.'),
+    'enable_tls': (
+        None,
+        'Enable TLS support, the private key and certificate needs to be mounted in the `/certs/` directory.',
+    ),
+    'persistent': (
+        None,
+        'Enable room data persistence, the information will be saved to the `rooms.db` file, only valid when `--isolate-rooms` is not specified.',
+    ),
+    'max_username': ('NUM', 'Maximum length of usernames, default is 16.'),
+    'max_chat_message': ('NUM', 'Maximum length of chat messages, default is 150.'),
+    'permanent_rooms': (
+        'ROOM',
+        'Specifies a list of rooms that will still be listed even if their playlist is empty, only valid when `--persistent` is specified, defaults to empty.',
+    ),
+    'listen_ipv4': ('ADDR', 'Listening address of Syncplay service on IPv4.'),
+    'listen_ipv6': ('ADDR', 'Listening address of Syncplay service on IPv6.'),
 }
-HELP_DESC = 'show this help message and exit'
-VER_DESC = 'show program\'s version number and exit'
+HELP_DESC = 'Show this help message and exit.'
+VER_DESC = 'Show version information and exit.'
 
 ARG_OPTS: dict[str, dict] = {}  # for loading cli arguments
 
