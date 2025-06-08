@@ -1,4 +1,4 @@
-ARG PYTHON="python:3.12-alpine3.21"
+ARG PYTHON="python:3.12-alpine3.22"
 
 FROM ${PYTHON} AS builder
 RUN apk add uv
