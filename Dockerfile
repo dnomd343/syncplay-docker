@@ -1,18 +1,22 @@
 ARG PYTHON="python:3.12-alpine3.22"
 
+
 FROM ${PYTHON} AS builder
 RUN apk add uv
 RUN sh -c '[ $(getconf LONG_BIT) -eq 64 ] || apk add gcc cargo musl-dev libffi-dev openssl-dev'
+
 WORKDIR /build/
-RUN --mount=type=bind,rw,source=./src/,target=./src/ \
-    --mount=type=bind,ro,source=uv.lock,target=uv.lock \
-    --mount=type=bind,ro,source=pyproject.toml,target=pyproject.toml \
-    uv tree --frozen && \
-    uv export --frozen --no-dev --no-emit-package syncplay -o requirements.txt && \
-    pip wheel --require-hashes -r requirements.txt --wheel-dir /wheels/ && \
+COPY uv.lock pyproject.toml .
+RUN uv export --frozen --no-dev --no-emit-package syncplay -o requirements.txt && \
+    pip wheel --require-hashes -r requirements.txt --wheel-dir /wheels/
+
+RUN --mount=type=bind,rw,source=./src/syncplay/,target=./src/syncplay/ \
     sed -i '/ep_client/s/ =/-client =/g; s/requirements_gui.txt/\/dev\/null/g' ./src/syncplay/setup.py && \
-    pip wheel --no-deps ./src/syncplay/ --wheel-dir /wheels/ && \
+    pip wheel --no-deps ./src/syncplay/ --wheel-dir /wheels/
+
+RUN --mount=type=bind,rw,source=./src/,target=./src/ \
     uv build --wheel -o /wheels/
+
 
 FROM ${PYTHON}
 LABEL org.opencontainers.image.vendor="Dnomd343"
