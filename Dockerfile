@@ -27,7 +27,7 @@ LABEL org.opencontainers.image.vendor="Dnomd343"
 LABEL org.opencontainers.image.authors="dnomd343@gmail.com"
 LABEL org.opencontainers.image.source="https://github.com/dnomd343/syncplay-docker.git"
 
-RUN sh -c '[ $(apk info -e libgcc) ] || apk add --no-cache libgcc'
+RUN sh -c '[ $(apk info -e libgcc) ] || [ $(getconf LONG_BIT) -eq 64 ] || apk add --no-cache libgcc'
 RUN --mount=type=cache,ro,from=builder,source=/wheels/,target=/wheels/ \
     PYTHONDONTWRITEBYTECODE=1 pip install --no-index --no-compile --no-cache-dir --find-links=/wheels/ /wheels/*.whl
 
