@@ -2,13 +2,17 @@ ARG PYTHON="python:3.12-alpine3.22"
 
 
 FROM ${PYTHON} AS builder
-RUN apk add uv
+RUN apk add uv binutils && pip install wheel
 RUN sh -c '[ $(getconf LONG_BIT) -eq 64 ] || apk add gcc cargo musl-dev libffi-dev openssl-dev'
 
 WORKDIR /build/
 COPY uv.lock pyproject.toml .
 RUN uv export --frozen --no-dev --no-emit-package syncplay -o requirements.txt && \
     pip wheel --require-hashes -r requirements.txt --wheel-dir /wheels/
+
+RUN ls /wheels/*.whl | xargs -n1 wheel unpack -d /wheels/unpack/ && \
+    find /wheels/unpack/ -name '*.so' -exec strip {} \; && \
+    ls -d /wheels/unpack/* | xargs -n1 wheel pack -d /wheels/
 
 RUN --mount=type=bind,rw,source=./src/syncplay/,target=./src/syncplay/ \
     sed -i '/ep_client/s/ =/-client =/g; s/requirements_gui.txt/\/dev\/null/g' ./src/syncplay/setup.py && \
