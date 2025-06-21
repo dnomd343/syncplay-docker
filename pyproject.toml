@@ -53,6 +53,15 @@ include = [
   "tests",
 ]
 
+[tool.pytest.ini_options]
+addopts = "-ra --tb=long"
+testpaths = ["tests"]
+
+[tool.coverage]
+run.omit = ["tests/*"]
+report.precision = 2
+html.title = "Syncplay Bootstrap Coverage"
+
 [tool.hatch.version]
 path = "src/syncplay/syncplay/__init__.py"
 
