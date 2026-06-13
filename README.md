@@ -6,7 +6,7 @@ Using a single command to start the [Syncplay](https://syncplay.pl/) service. Ye
 
 ```bash
 $ docker run --rm --net=host dnomd343/syncplay
-Welcome to Syncplay server, ver. 1.7.4
+Welcome to Syncplay server, ver. 1.7.5
 ```
 
 > Pressing `Ctrl+C` will terminate the service.
@@ -20,6 +20,8 @@ Welcome to Syncplay server, ver. 1.7.4
 If you cannot access the Internet, you need to obtain an OCI image and copy it onto a storage medium. For details, see [offline usage](#Registry).
 
 If you are located in China mainland which cannot access Docker Hub normally, you can replace `dnomd343/syncplay` with `ccr.ccs.tencentyun.com/dnomd343/syncplay` , which will use the TCR service in Guangzhou.
+
+---
 
 </details>
 
@@ -44,7 +46,7 @@ $ docker run -d --net=host \
     --disable-chat --motd='Hello' --password='PASSWD'
 ```
 
-Sometimes, we need to restart the server, it is necessary to persist Syncplay at this time, which means that the room data will be saved to disk. You need to choose a working directory to save them, such as `/etc/syncplay/` , execute the following command, the data will be saved to the `rooms.db` file.
+Sometimes, we need to restart the server, it is necessary to persist Syncplay at this time, which means that the room data will be saved to disk. You need to choose a working directory to save them, such as `/etc/syncplay/` , execute the following command, the data will be saved to the `rooms.db` file under working directory.
 
 ```bash
 $ docker run -d --net=host         \
@@ -103,7 +105,7 @@ Unlike some services, Syncplay does not need to be manually restarted when the c
 
 You can customize the Syncplay server by specifying the following command line arguments.
 
-> The following parameters are adjusted for Docker and are not exactly the same as [official documentation](https://man.archlinux.org/man/extra/syncplay/syncplay-server.1). Please refer to the current document when using.
+> The following parameters are optimized for Docker and some differences with [official documentation](https://man.archlinux.org/man/extra/syncplay/syncplay-server.1). Please refer to the current document when using.
 
 + `--config [FILE]` : Specify the configuration file, the default is `config.yml` .
 
@@ -145,7 +147,7 @@ Use the `--version` option to display the Syncplay and Python versions, as well 
 
 ```bash
 $ docker run --rm dnomd343/syncplay --version
-Syncplay Docker Bootstrap v1.7.4 (Yoitsu 115) [CPython 3.12.11 aarch64]
+Syncplay Docker Bootstrap v1.7.5 (Yoitsu 117) [CPython 3.12.13 aarch64]
 ```
 
 You can also use the following command to output help information.
@@ -240,7 +242,7 @@ You can also use JSON or TOML formats for the configuration file, which is ident
 
 ## Environment Variables
 
-The Syncplay container also supports configuration via environment variables. Only three types of fields are supported: numbers, strings, and booleans, this means that `permanent-rooms` is not supported. Environment variable names should be in uppercase letters, with `-` replaced by `_` , boolean values are represented by `ON` or `TRUE`. Below is an example of how to use environment variables for configuration.
+The Syncplay container also supports configuration via environment variables. Only three types of fields are supported: numbers, strings, and booleans. Environment variable names should be in uppercase letters, with `-` replaced by `_` , boolean values are represented by `ON` or `TRUE`. Below is an example of how to use environment variables for configuration.
 
 ```bash
 $ docker run -d --net=host \
@@ -266,9 +268,10 @@ services:
     restart: always
     volumes:
       - ./:/data/
+      - /etc/ssl/certs/343.re/:/certs/  # only when enable TLS
 ```
 
-We save this file in the `/etc/syncplay/` directory. Since a relative path in `volumes` option is used, it is also in the working directory. Execute the following command in this directory to start the Syncplay service.
+We save this file in the `/etc/syncplay/` aka working directory. Since a relative path in `volumes` option is used, it is also in the working directory. Execute the following command in this directory to start the Syncplay service.
 
 ```bash
 $ docker compose up -d
@@ -282,7 +285,7 @@ Similarly, you can map the certificate directory to enable TLS functionality, an
 
 ## Security
 
-In the commands above, we use `--net=host` to expose external services, which allows the container to access the host network directly. However, from a security perspective, it is recommended to use the bridge network and map the `tcp/8999` port, even though this may result in a slight performance decrease.
+In the commands above, we use `--net=host` to expose external services, which allows the container to access the host network directly. However, from a security perspective, it is recommended to use the `bridge` network and map the `tcp/8999` port, even though this may result in a slight performance decrease.
 
 ```bash
 $ docker run -d -p 8999:8999 \
@@ -299,7 +302,7 @@ $ podman run -d -p 8999:8999 \
 Alternatively, you can use Docker [rootless mode](https://docs.docker.com/engine/security/rootless/), although it is quite cumbersome to configure. If you only want to use Docker, you can specify the `UID` and `GID` when building the image so that the container will not have root permissions.
 
 ```bash
-# You can check the current non-root UID and GID values.
+# Check the current non-root UID and GID values.
 $ id
 uid=1000(dnomd343) gid=1000(dnomd343) ...
 
@@ -325,18 +328,21 @@ There are four CPU architectures are supported: `amd64` , `arm64` , `i386` and `
 
 You can pull the original OCI image and save it as a tar file for offline use. It is recommended to use the [skopeo](https://github.com/containers/skopeo.git) tool for this purpose.
 
-> You can use the `docker save` command to export the image, but only supports a single architecture.
+> You can also use the `docker save` command to export the image, but only supports a single architecture.
 
 ```bash
+# Archive images of all architectures for 1.7.5 version.
 $ skopeo copy --all                             \
-    docker://docker.io/dnomd343/syncplay:v1.7.4 \
-    oci-archive:syncplay-v1.7.4.tar
+    docker://docker.io/dnomd343/syncplay:v1.7.5 \
+    oci-archive:syncplay-v1.7.5.tar
 
+# Archive image of `arm64` architecture for 1.7.5 version.
 $ skopeo copy --override-os=linux --override-arch=arm64 \
-    docker://docker.io/dnomd343/syncplay:v1.7.4         \
-    oci-archive:syncplay-v1.7.4-arm64.tar
+    docker://docker.io/dnomd343/syncplay:v1.7.5         \
+    oci-archive:syncplay-v1.7.5-arm64.tar
 
-$ docker load < syncplay-v1.7.4.tar
+# Move to another computer and extract for docker.
+$ docker load < syncplay-v1.7.5.tar
 ```
 
 ## Troubleshooting
@@ -355,7 +361,7 @@ Command line options -> ...
 Configure file options -> ...
 Bootstrap final options -> {}
 Syncplay startup arguments -> ['syncplay', '--port', '8999', '--salt', '']
-Welcome to Syncplay server, ver. 1.7.4
+Welcome to Syncplay server, ver. 1.7.5
 ```
 
 ## Advanced
@@ -370,7 +376,7 @@ For some reasons, you may need to change the path of the configuration files or 
 
 ## Build Image
 
-> This project utilizes several [BuildKit](https://github.com/moby/buildkit.git) features (bundled after Docker 23.0) . As a result, other build tools may experience compatibility issues.
+> This project utilizes several [BuildKit](https://github.com/moby/buildkit.git) features during its build (bundled after Docker 23.0) . As a result, other build tools may experience compatibility issues.
 
 You can build an image directly from the source code using the following command.
 
@@ -382,8 +388,10 @@ You may also modify the source code to implement your own customizations.
 
 ```bash
 $ git clone https://github.com/dnomd343/syncplay-docker.git
-$ cd syncplay-docker/
+
+$ cd ./syncplay-docker/
 # some edit...
+
 $ docker build -t syncplay .
 ```
 
@@ -397,4 +405,4 @@ $ docker buildx build -t dnomd343/syncplay                    \
 
 ## License
 
-MIT ©2023 [@dnomd343](https://github.com/dnomd343)
+MIT License ©2026 [@dnomd343](https://github.com/dnomd343)
