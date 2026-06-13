@@ -19,7 +19,7 @@ jobs:
       - name: Extract Syncplay Version from Dockerfile
         id: get-version
         run: |
-          syncplay_version=$(grep -oP '(?<=ENV SYNCPLAY=")[^"]+' Dockerfile)
+          syncplay_version=$(grep -oP '(?<=version = ")[^"]+' <(grep -A1 '^name *= *"syncplay"$' uv.lock))
           echo "syncplay_version=${syncplay_version}"
           echo "syncplay_version=${syncplay_version}" >> $GITHUB_OUTPUT
 
