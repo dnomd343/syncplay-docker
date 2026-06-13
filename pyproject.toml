@@ -15,17 +15,17 @@ requires-python = "==3.12.*"
 scripts.syncplay = "syncplay_boot:bootstrap"
 
 dependencies = [
-    "pyyaml>=6.0.2",
+    "pyyaml>=6.0.3",
     "syncplay",
 ]
 
 [dependency-groups]
 dev = [
-    "black>=25.1.0",
-    "coverage>=7.8.2",
-    "pyright>=1.1.401",
-    "pytest>=8.4.0",
-    "ruff>=0.11.13",
+    "black>=26.5.1",
+    "coverage>=7.14.1",
+    "pyright>=1.1.410",
+    "pytest>=9.0.3",
+    "ruff>=0.15.17",
     "toml>=0.10.2",
 ]
 
