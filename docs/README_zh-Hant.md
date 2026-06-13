@@ -1,43 +1,59 @@
 ## 快速開始
 
-使用壹句命令開啓 [Syncplay](https://syncplay.pl/) 服務，是的，就這麽簡單。
+僅需一行命令開啟 [Syncplay](https://syncplay.pl/) 服務，是的，就這麼簡單。
 
 ```bash
-> docker run --rm --net=host dnomd343/syncplay
-Welcome to Syncplay server, ver. 1.7.1
+$ docker run --rm --net=host dnomd343/syncplay
+Welcome to Syncplay server, ver. 1.7.5
 ```
 
-> 按下 `Ctrl+C` 將退出服務。
+> 按下 `Ctrl+C` 可終止服務。
 
-如果沒有意外，您可以在客戶端填入服務器 IP 或域名進行驗證，默認端口是 `tcp/8999` 。若無法連上，請檢查您的防火牆設置。
+<details>
 
-爲了更好地運行服務，我們應當使用以下命令讓 Syncplay 在後台運行，並保持啓動。
+<summary><b>無法訪問 Docker Hub？</b></summary>
+
+<br/>
+
+如果無法訪問 Internet，需要先獲取 OCI 鏡像並複製到儲存媒介。詳情請參見 [offline usage](#Registry) 。
+
+如果您位於中國大陸且無法正常訪問 Docker Hub，可將 `dnomd343/syncplay` 替換為 `ccr.ccs.tencentyun.com/dnomd343/syncplay`，這將使用廣州的 TCR 服務。
+
+---
+
+</details>
+
+如果沒有意外，可在客戶端填寫伺服器 IP 或域名進行驗證，預設端口為 `tcp/8999` 。如果您無法連接，請檢查防火牆設置。
+
+若要在後台運行服務，請使用下面的命令啟動 Syncplay ：
 
 ```bash
-docker run -d --net=host --restart=always --name=syncplay dnomd343/syncplay
+$ docker run -d --net=host \
+    --restart=always --name=syncplay dnomd343/syncplay
 ```
 
-> 您可以使用 `docker ps -a` 看到正在運行的服務，還可以使用 `docker rm -f syncplay` 停止服務。
+> 使用 `docker ps -a` 可查看正在運行的容器，使用 `docker rm -f syncplay` 可停止服務。
 
-您可以加入更多的參數來實現定制化，例如我們讓服務器連接時需要輸入密碼、禁止聊天、並在進入房間後顯示壹句歡迎語，使用以下命令。
+您可以通過附加參數定制服務，例如要求連接時輸入密碼、禁用聊天，並在進入房間時顯示歡迎語。示例如下：
 
-> 注意在按下回車前，您必須執行 `docker rm -f syncplay` 移除掉原有的服務，否則它們會發生沖突。
+> 注意：按回車前請先執行 `docker rm -f syncplay` 移除已存在服務，否則會發生衝突。
 
 ```bash
-docker run -d --net=host --restart=always --name=syncplay dnomd343/syncplay \
-  --disable-chat --password=PASSWD --motd='HELLO WORLD'
+$ docker run -d --net=host \
+    --restart=always --name=syncplay dnomd343/syncplay \
+    --disable-chat --motd='Hello' --password='PASSWD'
 ```
 
-服務器在必要的時候會被重啓，也可能是 Docker 服務需要更新，無論是不是預期中的，這個時候將 Syncplay 持久化是很有必要的，這意味著房間數據將會被保存到磁盤上。您需要選擇壹個工作目錄來保存他們，例如 `/etc/syncplay/` ，執行以下命令，數據會被保存到 `rooms.db` 文件中。
+有時需要重啟伺服器，此時有必要將 Syncplay 持久化保存，也就是把房間數據寫入磁碟。您可以指定一個工作目錄，比如 `/etc/syncplay/`，執行下面命令後，數據會保存到該目錄下的 `rooms.db` 文件。
 
 ```bash
-docker run -d --net=host           \
-  --restart=always --name=syncplay \
-  --volume /etc/syncplay/:/data/   \
-  dnomd343/syncplay --persistent
+$ docker run -d --net=host         \
+    --volume /etc/syncplay/:/data/ \
+    --restart=always --name=syncplay dnomd343/syncplay \
+    --persistent --motd='Persistent Server'
 ```
 
-這個目錄還有更多的用途，例如添加 `--enable-stats` 選項將開啓統計功能，數據將被保存到目錄下 `stats.db` 這個文件中。您還可以在目錄下創建 `config.yml` 文件，將配置參數寫在裏面，Syncplay 啓動時將會自動讀取，避免在命令行中鍵入大量參數。
+該目錄還可用於其他用途。例如添加 `--enable-stats` 選項將啟用統計功能，數據會保存到目錄下的 `stats.db` 文件。您還可以在該目錄中創建 `config.yml` 文件，將配置選項寫入其中。Syncplay 啟動時會自動讀取此文件，無需在命令行中輸入大量參數。
 
 ```yaml
 # /etc/syncplay/config.yml
@@ -50,117 +66,153 @@ motd: |
   More information...
 ```
 
-在實際部署時，開啓 TLS 總會是壹個好主意（當然它不是必要的，這壹步可以跳過），幸運的是，Syncplay 可以很簡單地做到這壹點。在開始前，您需要准備壹個域名，並把它的 DNS 解析到當前服務器上，同時，我們必須擁有它的證書文件。
+部署時啟用 TLS 通常是個好主意（本步驟可選），幸運的是 Syncplay 可以很簡單地做到這點。在開始前，您需要準備域名並將其 DNS 指向當前伺服器，同時準備域名的私鑰和證書文件。
 
-證書的申請可以通過 [`acme.sh`](https://acme.sh/) 、[`certbot`](https://certbot.eff.org/) 或者其他合理的方式進行。總之，您最終會得到壹把私鑰和壹張證書，Syncplay 需要您提供以下三個文件。
+證書可通過 [`acme.sh`](https://acme.sh/) 、[`certbot`](https://certbot.eff.org/) 或其他方式獲取。最終您會得到私鑰和證書文件，Syncplay 需要以下三個文件：
 
-+ `cert.pem` ：CA 機構簽發的證書
-+ `chain.pem` ：CA 機構的證書鏈
-+ `privkey.pem` ：證書的私鑰文件
+> 某些 CA 可能不會提供 chain 文件，需要您手動獲取，例如 [`whatsmychaincert`](https://whatsmychaincert.com/) 。
 
-例如在 `acme.sh` 中，可以這樣子執行命令，將 `343.re` 這個域名的證書配置保存到 `/etc/ssl/certs/343.re/` 目錄下。
++ `cert.pem`：CA 簽發的證書
++ `chain.pem`：CA 證書鏈
++ `privkey.pem`：證書私鑰
 
-```bash
-acme.sh --install-cert -d 343.re               \
-  --cert-file  /etc/ssl/certs/343.re/cert.pem  \
-  --ca-file    /etc/ssl/certs/343.re/chain.pem \
-  --key-file   /etc/ssl/certs/343.re/privkey.pem
-```
-
-現在我們已經准備好了，只需要執行下面的命令，壹個更安全更隱私的 Syncplay 服務將會啓動。
+例如使用 `acme.sh` 執行下面命令，將域名 `343.re` 的證書保存到 `/etc/ssl/certs/343.re/` 目錄：
 
 ```bash
-docker run -d --net=host                  \
-  --restart=always --name=syncplay        \
-  --volume /etc/syncplay/:/data/          \
-  --volume /etc/ssl/certs/343.re/:/certs/ \
-  dnomd343/syncplay --persistent --enable-tls
+$ acme.sh --install-cert -d 343.re               \
+    --cert-file  /etc/ssl/certs/343.re/cert.pem  \
+    --ca-file    /etc/ssl/certs/343.re/chain.pem \
+    --key-file   /etc/ssl/certs/343.re/privkey.pem
 ```
 
-> 注意客戶端的服務器地址必須與證書匹配，否則連接將會失敗。
+準備就緒後，執行以下命令即可啟動一個更安全、更私密的 Syncplay 服務：
 
-需要說明的是，與有些服務不同，Syncplay 在證書發生更新時不需要手動重啓，它會自動檢測證書的變化，並使用最新的版本。此外，Syncplay 服務端的 TLS 是自適應的，這意味著，即使是不支持 TLS 的舊版本客戶端，它們仍然可以正常通訊，但是注意此時安全加密將不再生效。
+```bash
+$ docker run -d --net=host                  \
+    --volume /etc/syncplay/:/data/          \
+    --volume /etc/ssl/certs/343.re/:/certs/ \
+    --restart=always --name=syncplay dnomd343/syncplay \
+    --enable-tls --motd='Secure Server'
+```
+
+> 注意客戶端輸入的伺服器地址必須與證書匹配，否則連接會失敗。
+
+與一些服務不同，Syncplay 的證書更新後無需手動重啟，它會自動檢測證書變化並使用最新版本。此外，Syncplay 服務端的 TLS 具有自適應能力，即使舊版本客戶端不支持 TLS 仍可正常通信，但此時安全加密將無法生效。
 
 ## 命令行參數
 
-您可以通過指定以下命令行參數來定制 Syncplay 服務器。
+通過指定以下命令行參數來定制 Syncplay 伺服器：
 
-> 以下參數是針對 docker 調整過的，與[官方文檔](https://man.archlinux.org/man/extra/syncplay/syncplay-server.1)不完全相同，使用時請以此爲准。
+> 以下參數已針對 Docker 優化，與[官方文檔](https://man.archlinux.org/man/extra/syncplay/syncplay-server.1)存在一定差異，使用時請以本說明為準。
 
-+ `--port [PORT]` ：Syncplay 服務器監聽端口, 默認爲 `8999`
++ `--config [FILE]` ：指定配置文件，預設是 `config.yml` 。
 
-+ `--password [PASSWD]` ：用戶登錄服務器的密碼，默認不啓用
++ `--port [PORT]` ：Syncplay 服務監聽端口，預設是 `8999` 。
 
-+ `--motd [MESSAGE]` ：用戶進入房間的歡迎內容，默認不啓用
++ `--password [PASSWD]` ：連接伺服器的身份驗證密碼，預設不啟用。
 
-+ `--salt [TEXT]` ：密碼加鹽，指定隨機字符串，用于抵抗哈希攻擊（例如彩虹表），默認爲空字符串
++ `--motd [MESSAGE]` ：使用者進入房間時顯示的歡迎文本，預設不啟用。
 
-+ `--random-salt` ：使用隨機生成的鹽，僅當 `--salt` 未指定時生效，默認不啓用
++ `--salt [TEXT]` ：用於加固密碼的隨機字符串鹽值，預設是空字符串。
 
-+ `--isolate-rooms` ：開啓獨立房間，用戶將看不到其他房間的用戶信息，默認不啓用
++ `--random-salt` ：使用隨機生成的鹽值，僅在未指定 `--salt` 時生效，預設不啟用。
 
-+ `--disable-chat` ：禁止聊天功能，默認不啓用
++ `--isolate-rooms` ：啟用房間隔離，用戶無法看到其他房間的信息，預設不啟用。
 
-+ `--disable-ready` ：禁止就緒指示器功能，默認不啓用
++ `--disable-chat` ：禁用聊天功能，預設不啟用。
 
-+ `--enable-stats` ：開啓服務器統計功能，數據將被保存到 `stats.db` 文件中，默認不啓用
++ `--disable-ready` ：禁用就緒指示器功能，預設不啟用。
 
-+ `--enable-tls` ：開啓 TLS 支持, 證書文件需要挂載到 `/certs/` 目錄下，包括 `cert.pem` 、`chain.pem` 、`privkey.pem` 三個文件，默認不啓用
++ `--enable-stats` ：啟用伺服器統計功能，數據將保存到 `stats.db` ，預設不啟用。
 
-+ `--persistent` ：開啓房間數據持久化，信息將被保存到 `rooms.db` 文件中，僅當 `--isolate-rooms` 未指定時有效，默認不啓用
++ `--enable-tls` ：啟用 TLS 支持，需將證書文件掛載到 `/certs/` 目錄，包括 `cert.pem` 、`chain.pem` 和 `privkey.pem` ，預設不啟用。
 
-+ `--max-username [NUM]` ：用戶名最大長度，默認爲 `150`
++ `--persistent` ：啟用房間數據持久化，信息將保存到 `rooms.db` ，僅在未指定 `--isolate-rooms` 時有效，預設不啟用。
 
-+ `--max-chat-message [NUM]` ：聊天消息最大長度，默認爲 `150`
++ `--max-username [NUM]` ：用戶名最大長度，預設是 `16` 。
 
-+ `--permanent-rooms [ROOM ...]` ：即使播放列表爲空時仍會列出的房間，僅當 `--persistent` 指定時有效，默認爲空
++ `--max-chat-message [NUM]` ：聊天消息最大長度，預設是 `150` 。
 
-+ `--listen-ipv4 [ADDR]` ：自定義 Syncplay 服務在 IPv4 網絡上的監聽地址，默認不啓用
++ `--permanent-rooms [ROOM ...]` ：指定即使播放列表為空也仍會列出的房間，僅在指定 `--persistent` 時有效，預設為空。
 
-+ `--listen-ipv6 [ADDR]` ：自定義 Syncplay 服務在 IPv6 網絡上的監聽地址，默認不啓用
++ `--listen-ipv4 [ADDR]` ：在 IPv4 網路上監聽的地址，預設不啟用。
 
-> 當您僅指定 `--listen-ipv4` 時，Syncplay 將不會在 IPv6 上監聽，反之同理。當兩者均指定時，Syncplay 將工作在雙棧網絡下。
++ `--listen-ipv6 [ADDR]` ：在 IPv6 網路上監聽的地址，預設不啟用。
 
-您也可以使用以下命令輸出幫助信息。
++ `--version` ：顯示 Syncplay 和 Python 版本，以及 CPU 架構。
+
+> 僅指定 `--listen-ipv4` 時，Syncplay 不會在 IPv6 上監聽；僅指定 `--listen-ipv6` 時，Syncplay 不會在 IPv4 上監聽。若兩者均指定，則啟用雙棧網絡。
+
+使用 `--version` 選項顯示 Syncplay 和 Python 的版本，同時輸出 CPU 架構：
 
 ```bash
-> docker run --rm syncplay --help
-usage: syncplay [-h] [-p PORT] [--password PASSWD] [--motd MESSAGE]
+$ docker run --rm dnomd343/syncplay --version
+Syncplay Docker Bootstrap v1.7.5 (Yoitsu 117) [CPython 3.12.13 aarch64]
+```
+
+您可以運行下面命令查看幫助信息：
+
+<details>
+
+<summary><b>命令行幫助信息</b></summary>
+
+<br/>
+
+```bash
+$ docker run --rm dnomd343/syncplay --help
+usage: syncplay [-h] [-v] [-c FILE] [-p PORT] [-k PASSWD] [-m MESSAGE]
                 [--salt TEXT] [--random-salt] [--isolate-rooms]
                 [--disable-chat] [--disable-ready] [--enable-stats]
                 [--enable-tls] [--persistent] [--max-username NUM]
                 [--max-chat-message NUM] [--permanent-rooms [ROOM ...]]
-                [--listen-ipv4 INTERFACE] [--listen-ipv6 INTERFACE]
+                [--listen-ipv4 ADDR] [--listen-ipv6 ADDR]
 
 Syncplay Docker Bootstrap
 
 options:
-  -h, --help            show this help message and exit
-  -p PORT, --port PORT  listen port of syncplay server
-  --password PASSWD     authentication of syncplay server
-  --motd MESSAGE        welcome text after the user enters the room
-  --salt TEXT           string used to secure passwords
-  --random-salt         use a randomly generated salt value
-  --isolate-rooms       room isolation enabled
-  --disable-chat        disables the chat feature
-  --disable-ready       disables the readiness indicator feature
-  --enable-stats        enable syncplay server statistics
-  --enable-tls          enable tls support of syncplay server
-  --persistent          enables room persistence
-  --max-username NUM    maximum length of usernames
+  -h, --help            show this help message and exit.
+  -v, --version         show version information and exit.
+  -c FILE, --config FILE
+                        Specify the configuration file path, the default is
+                        `config.yml`.
+  -p PORT, --port PORT  Listening port of Syncplay service, the default is
+                        8999.
+  -k PASSWD, --password PASSWD
+                        Authentication when connecting to the server.
+  -m MESSAGE, --motd MESSAGE
+                        The welcome text after the user enters the room.
+  --salt TEXT           A string used to secure passwords, defaults to empty.
+  --random-salt         Use a randomly generated salt value, valid when
+                        `--salt` is not specified.
+  --isolate-rooms       Enable room isolation, users cannot see information
+                        from anyone outside their room.
+  --disable-chat        Disables the chat feature.
+  --disable-ready       Disables the readiness indicator feature.
+  --enable-stats        Enable the server statistics feature, the data will be
+                        saved in the `stats.db` file.
+  --enable-tls          Enable TLS support, the private key and certificate
+                        needs to be mounted in the `/certs/` directory.
+  --persistent          Enable room data persistence, the information will be
+                        saved to the `rooms.db` file, only valid when
+                        `--isolate-rooms` is not specified.
+  --max-username NUM    Maximum length of usernames, default is 16.
   --max-chat-message NUM
-                        maximum length of chat messages
+                        Maximum length of chat messages, default is 150.
   --permanent-rooms [ROOM ...]
-                        permanent rooms of syncplay server
-  --listen-ipv4 INTERFACE
-                        listening address of ipv4
-  --listen-ipv6 INTERFACE
-                        listening address of ipv6
+                        Specifies a list of rooms that will still be listed
+                        even if their playlist is empty, only valid when
+                        `--persistent` is specified, defaults to empty.
+  --listen-ipv4 ADDR    Listening address of Syncplay service on IPv4.
+  --listen-ipv6 ADDR    Listening address of Syncplay service on IPv6.
 ```
+
+</details>
 
 ## 配置文件
 
-如果您配置了較多的選項，每次啓動時輸入大量命令行參數會是相當麻煩且易出錯的事情，這個時候可以將它們寫到配置文件中。在工作目錄中創建 `config.yml` 文件，它使用 YAML 格式，支持命令行中的所有參數，Syncplay 在啓動時會自動讀取並加載，但需要注意的是，如果命令行指定了同樣的參數，將會覆蓋配置文件的選項。
+如果需要配置大量選項，每次啟動時輸入大量命令行參數會很麻煩且容易出錯。此時可以將它們寫入配置文件。
+
+在工作目錄中創建 `config.yml` 文件，使用 YAML 格式指定命令行支持的所有參數。Syncplay 啟動時會自動讀取該文件。但是請注意，如果同一參數同時出現在命令行和配置文件中，命令行參數會覆蓋配置文件中的值。
 
 ```yaml
 port: 7999
@@ -186,25 +238,28 @@ motd: |
   More information...
 ```
 
+您還可以使用 JSON 或 TOML 格式的配置文件，Syncplay 會根據文件後綴自動識別。預設配置文件名為 `config.yml` ，也可以通過 `--config` 參數或 `CONFIG` 環境變數指定其他文件。
+
 ## 環境變量
 
-Syncplay 容器還支持通過環境變量來配置，它支持數字、字符串以及布爾三種類型的字段，這裏意味著 `permanent-rooms` 不被支持。環境變量全部使用大寫命名，並將 `-` 替換爲 `_` ，布爾值使用 `ON` 或者 `TRUE` 表示，下面是壹個使用環境變量的例子。
+Syncplay 容器還支持通過環境變量配置。僅支持數字、字符串和布爾類型三種字段。環境變量名應全部使用大寫，並把 `-` 替換為 `_`，布爾值使用 `ON` 或 `TRUE` 表示，下面是一個範例：
 
 ```bash
-docker run -d --net=host --restart=always --name=syncplay \
-  --env PORT=7999 --env MOTD=Hello --env DISABLE_READY=ON \
-  dnomd343/syncplay
+$ docker run -d --net=host \
+    --env PORT=7999        \
+    --env MOTD=Hello       \
+    --env DISABLE_CHAT=ON  \
+    --restart=always --name=syncplay dnomd343/syncplay
 ```
 
-您或許已經注意到了，我們支持三種配置方式：命令行參數、配置文件和環境變量，它們的優先級由高到低，也就是命令行參數將覆蓋配置文件的選項，配置文件將覆蓋環境變量的值，您可以搭配使用它們。
+如您所見，Syncplay 支持三種配置方式：命令行參數、配置文件和環境變量。優先級從高到低，也就是命令行參數將覆蓋配置文件選項，配置文件將覆蓋環境變量，您可根據需要組合使用。
 
 ## Docker Compose
 
-使用 `docker-compose` 來部署 Syncplay 是壹種更優雅的方式，妳需要創建壹個 `docker-compose.yml` 配置文件，寫入以下的示例。
+使用 `docker compose` 部署 Syncplay 更加優雅。您需要創建一個 `docker-compose.yml` 文件，內容示例如下：
 
 ```yaml
 # /etc/syncplay/docker-compose.yml
-version: '3'
 services:
   syncplay:
     container_name: syncplay
@@ -213,76 +268,139 @@ services:
     restart: always
     volumes:
       - ./:/data/
+      - /etc/ssl/certs/343.re/:/certs/  # only when enable TLS
 ```
 
-我們將這個文件保存在 `/etc/syncplay/` 目錄下，由于使用了相對路徑，因此它也同樣處于工作目錄中，在該目錄下執行命令啓動 Syncplay 服務。
+將該文件保存在 `/etc/syncplay/` 也就是工作目錄下，由於 `volumes` 中使用了相對路徑，它也位於工作目錄中。進入該目錄後執行以下命令即可啟動 Syncplay 服務：
 
 ```bash
-> docker-compose up
-Recreating syncplay ... done
-Attaching to syncplay
-syncplay    | Welcome to Syncplay server, ver. 1.7.1
+$ docker compose up -d
+[+] Running 1/1
+✔ Container syncplay Started
 ```
 
-> 添加 `-d` 選項可以讓服務在後台運行。
+> 添加 `-d` 參數可讓服務在後台運行。
 
-類似的，您可以映射證書目錄來開啓 TLS 功能，以及編輯 `config.yml` 文件來配置更多選項。
+同樣，您可以映射證書目錄以啟用 TLS，並編輯 `config.yml` 配置更多選項。
 
-## 錯誤排查
+## 安全
 
-如果您遇到了任何錯誤，請先使用 `docker logs syncplay` 命令打印進程輸出內容，它可能包含有用的錯誤信息，您還可以通過指定環境變量 `DEBUG=ON` 來輸出更詳細的日志。
+上述命令中我們使用 `--net=host` 直接將容器接入主機網絡，會暴露外部服務。出於安全考慮，建議使用 `bridge` 網絡並映射 `tcp/8999` 端口，儘管性能可能會略微下降。
 
 ```bash
-> docker run --rm --env DEBUG=ON dnomd343/syncplay
-Bootstrap options -> [('port', <class 'int'>, False), ('password', <class 'str'>, False), ('motd', <class 'str'>, False), ('salt', <class 'str'>, False), ('random_salt', <class 'bool'>, False), ('isolate_rooms', <class 'bool'>, False), ('disable_chat', <class 'bool'>, False), ('disable_ready', <class 'bool'>, False), ('enable_stats', <class 'bool'>, False), ('enable_tls', <class 'bool'>, False), ('persistent', <class 'bool'>, False), ('max_username', <class 'int'>, False), ('max_chat_message', <class 'int'>, False), ('permanent_rooms', <class 'str'>, True), ('listen_ipv4', <class 'str'>, False), ('listen_ipv6', <class 'str'>, False)]
-Environment variables -> environ({'PATH': '/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'HOSTNAME': '0a28a2e2ea50', 'DEBUG': 'ON', 'LANG': 'C.UTF-8', 'GPG_KEY': 'A035C8C19219BA821ECEA86B64E628F8D684696D', 'PYTHON_VERSION': '3.10.13', 'PYTHON_PIP_VERSION': '23.0.1', 'PYTHON_SETUPTOOLS_VERSION': '65.5.1', 'PYTHON_GET_PIP_URL': 'https://github.com/pypa/get-pip/raw/4cfa4081d27285bda1220a62a5ebf5b4bd749cdb/public/get-pip.py', 'PYTHON_GET_PIP_SHA256': '9cc01665956d22b3bf057ae8287b035827bfd895da235bcea200ab3b811790b6', 'PYTHONUNBUFFERED': '1', 'HOME': '/root'})
-Environment options -> {}
-Configure file -> {}
-Configure file options -> {}
-Command line arguments -> Namespace(port=None, password=None, motd=None, salt=None, random_salt=False, isolate_rooms=False, disable_chat=False, disable_ready=False, enable_stats=False, enable_tls=False, persistent=False, max_username=None, max_chat_message=None, permanent_rooms=None, listen_ipv4=None, listen_ipv6=None)
-Command line options -> {}
+$ docker run -d -p 8999:8999 \
+    --restart=always --name=syncplay dnomd343/syncplay
+```
+
+預設情況下，Docker 以 root 使用者運行容器，這存在安全風險。本項目構建的鏡像符合 OCI 標準，因此您可以使用 [Podman](https://podman.io/) 完全替代 Docker，Podman 預設以非 root 模式運行。
+
+```bash
+$ podman run -d -p 8999:8999 \
+    --restart=always --name=syncplay dnomd343/syncplay
+```
+
+或者，您也可以使用 Docker [rootless mode](https://docs.docker.com/engine/security/rootless/)，不過配置較為繁瑣。如果只希望繼續使用 Docker，可在構建鏡像時指定 `UID` 和 `GID` ，使容器不再以 root 權限運行。
+
+```bash
+# 檢查當前非 root 的 UID 和 GID。
+$ id
+uid=1000(dnomd343) gid=1000(dnomd343) ...
+
+# 使用獲得的 UID 和 GID 作為構建參數。
+$ docker build -t my-syncplay \
+    --build-arg USER_UID=1000 \
+    --build-arg USER_GID=1000 \
+    https://github.com/dnomd343/syncplay-docker.git
+
+$ docker run -d -p 8999:8999 \
+    --restart=always --name=syncplay my-syncplay
+```
+
+## Registry
+
+本項目發布的鏡像遵循 [OCI 鏡像格式規範](https://github.com/opencontainers/image-spec)，可分發到任何支持 [OCI Distribution 規範](https://github.com/opencontainers/distribution-spec) 的鏡像倉庫。當前工作流中，GitHub Actions 會自動將鏡像分發到以下倉庫：
+
+- Docker Hub: `dnomd343/syncplay`
+- Github Package: `ghcr.io/dnomd343/syncplay`
+- Tencent Cloud: `ccr.ccs.tencentyun.com/dnomd343/syncplay`
+
+當前支持四種 CPU 架構：`amd64`、`arm64`、`i386` 和 `arm/v7` 。在拉取鏡像時，容器工具會根據主機架構自動選擇合適版本。
+
+您可以將原始 OCI 鏡像拉取後導出為 tar 文件以便離線使用。推薦使用 [skopeo](https://github.com/containers/skopeo.git) 工具達成。
+
+> 您也可使用 `docker save` 導出鏡像，但僅支持單一架構。
+
+```bash
+# 归档 1.7.5 版本所有架构的镜像。
+$ skopeo copy --all                             \
+    docker://docker.io/dnomd343/syncplay:v1.7.5 \
+    oci-archive:syncplay-v1.7.5.tar
+
+# 归档 1.7.5 版本 arm64 架构的镜像。
+$ skopeo copy --override-os=linux --override-arch=arm64 \
+    docker://docker.io/dnomd343/syncplay:v1.7.5         \
+    oci-archive:syncplay-v1.7.5-arm64.tar
+
+# 将镜像移到另一台計算機並在 docker 中解壓。
+$ docker load < syncplay-v1.7.5.tar
+```
+
+## 故障排查
+
+如果遇到錯誤，請先使用 `docker logs syncplay` 查看進程輸出，它通常會提供有用的信息。您也可以通過設置環境變量 `DEBUG=ON` 輸出更詳細日誌。
+
+```bash
+$ docker run --rm --env DEBUG=ON dnomd343/syncplay
+ENV_OPTS -> ...
+CFG_OPTS -> ...
+ARG_OPTS -> ...
+Environment variables -> ...
+Configure content -> ...
+Environment options -> ...
+Command line options -> ...
+Configure file options -> ...
 Bootstrap final options -> {}
-Syncplay startup arguments -> ['--port', '8999', '--salt', '']
-Welcome to Syncplay server, ver. 1.7.1
+Syncplay startup arguments -> ['syncplay', '--port', '8999', '--salt', '']
+Welcome to Syncplay server, ver. 1.7.5
 ```
 
-## 高級選項
+## 高級
 
-出于壹些原因，您可能需要更改配置文件或工作目錄的位置，這在 Syncplay 容器中是可行的，它需要您使用環境變量來指定。
+由於某些原因，您可能需要更改配置文件路徑或工作目錄，Syncplay 容器支持通過環境變量指定。
 
-+ `TEMP_DIR` ：臨時目錄，它不需要被持久化，默認爲 `/tmp/`
++ `TEMP_DIR` ：臨時目錄，不需持久化，默認為 `/tmp/` 。
++ `WORK_DIR` ：工作目錄，用於存儲 Syncplay 相關數據，默認為 `/data/` 。
++ `CERT_DIR` ：證書目錄，用於存放 TLS 證書和私鑰文件，默認為 `/certs/` 。
 
-+ `WORK_DIR` ：工作目錄，它存儲和 Syncplay 相關的數據，默認爲 `/data/`
+## 構建鏡像
 
-+ `CERT_DIR` ：證書目錄，它用于存放 TLS 相關的證書和私鑰文件，默認爲 `/certs/`
+> 本項目在構建過程中使用了若干 [BuildKit](https://github.com/moby/buildkit.git) 特性（隨 Docker 23.0 及更高版本捆綁）。因此其他構建工具可能會出現相容性問題。
 
-+ `CONFIG` ：配置文件，它定義引導腳本讀取的 YAML 配置，默認爲 `config.yml`
-
-## 容器構建
-
-您可以直接從源碼中構架出鏡像，使用以下命令。
+您可以直接從源碼構建鏡像：
 
 ```bash
-docker build -t syncplay https://github.com/dnomd343/syncplay-docker.git
+$ docker build -t syncplay https://github.com/dnomd343/syncplay-docker.git
 ```
 
-您也可以更改源代碼來實現自己的定制。
+您也可以修改源代碼以實現自定義功能：
 
 ```bash
-> git clone https://github.com/dnomd343/syncplay-docker.git
-> cd syncplay-docker/
+$ git clone https://github.com/dnomd343/syncplay-docker.git
+
+$ cd ./syncplay-docker/
 # some edit...
-> docker build -t syncplay .
+
+$ docker build -t syncplay .
 ```
 
-如果您需要多種架構的鏡像，請使用 `buildx` 命令構建。
+如果需要構建多架構鏡像，請使用 `buildx` 命令：
 
 ```bash
-docker buildx build -t dnomd343/syncplay                    \
-  --platform=linux/amd64,linux/386,linux/arm64,linux/arm/v7 \
-  https://github.com/dnomd343/syncplay-docker.git --push
+$ docker buildx build -t dnomd343/syncplay                    \
+    --platform=linux/amd64,linux/386,linux/arm64,linux/arm/v7 \
+    https://github.com/dnomd343/syncplay-docker.git --push
 ```
 
-## 許可證
+## 许可证
 
-MIT ©2023 [@dnomd343](https://github.com/dnomd343)
+MIT License ©2026 [@dnomd343](https://github.com/dnomd343)
