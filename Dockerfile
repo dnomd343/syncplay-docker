@@ -1,4 +1,4 @@
-ARG PYTHON="python:3.12-alpine3.22"
+ARG PYTHON="python:3.12-alpine3.24"
 
 
 FROM ${PYTHON} AS builder
