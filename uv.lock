@@ -441,7 +441,7 @@ wheels = [
 
 [[package]]
 name = "syncplay"
-version = "1.7.4"
+version = "1.7.5"
 source = { directory = "src/syncplay" }
 dependencies = [
     { name = "appnope", marker = "sys_platform == 'darwin'" },
